@@ -4,8 +4,8 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
-import { Type } from 'class-transformer';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { StoryModule } from './story/story.module';
 
 @Module({
   imports: [
@@ -20,6 +20,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       synchronize: process.env.DB_SYNCHRONIZE === '1',
       autoLoadEntities: process.env.DB_AUTO_LOAD_ENTITIES === '1',
     }),
+    StoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

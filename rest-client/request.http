@@ -1,4 +1,5 @@
 @baseUrl = http://localhost:3000
+@jwtToken = {{authLogin.response.body.accessToken}}
 
 ### Auth Login
 # @name authLogin
@@ -10,7 +11,7 @@ Content-Type: application/json
   "password": "123456"
 }
 
-### User
+### Create user
 # @name createUser
 POST {{baseUrl}}/user
 Content-Type: application/json
@@ -20,4 +21,24 @@ Content-Type: application/json
   "email": "user@email.com",
   "password": "123456",
   "avatarUrl": "urldaimagem"
+}
+
+### Get one user
+# @name getUserById
+GET {{baseUrl}}/user/profile
+Authorization: Bearer {{jwtToken}}
+
+### Create Story
+# @name createStory
+POST {{baseUrl}}/story
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "title": "The Last Kingdom2",
+  "slug": "the-last-kingdom2",
+  "coverUrl": "https://example.com/covers/last-kingdom.jpg",
+  "storyType": "original",
+  "mainGenre": "fantasy",
+  "language": "english"
 }
