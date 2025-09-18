@@ -12,6 +12,7 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from 'src/auth/types/authenticated-request';
+import { ResponseUserDto } from './dto/response-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -19,12 +20,14 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  findOne(@Req() req: AuthenticatedRequest) {
-    return this.userService.findById(req.user.id);
+  async findOne(@Req() req: AuthenticatedRequest) {
+    const user = await this.userService.findById(req.user.id);
+    return new ResponseUserDto(user);
   }
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    const user = await this.userService.create(createUserDto);
+    return new ResponseUserDto(user);
   }
 }

@@ -27,4 +27,19 @@ export class StoryService {
 
     return this.storyRepository.save(post);
   }
+
+  async findOneBySlug(slug: string) {
+    const story = await this.storyRepository.findOne({
+      where: { slug },
+      relations: {
+        author: true,
+      },
+    });
+
+    if (!story) {
+      throw new NotFoundException('Story not found');
+    }
+
+    return story;
+  }
 }

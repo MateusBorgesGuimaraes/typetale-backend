@@ -60,7 +60,6 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    const { passwordHash, ...rest } = user;
-    return rest;
+    return user;
   }
 }

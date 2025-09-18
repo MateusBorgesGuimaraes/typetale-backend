@@ -35,10 +35,16 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "The Last Kingdom2",
-  "slug": "the-last-kingdom2",
+  "title": "The Last Kingdom",
+  "slug": "the-last-kingdom",
   "coverUrl": "https://example.com/covers/last-kingdom.jpg",
   "storyType": "original",
+  "synopsis": "here are the synopsis od the story",
+  "tags": ["romanece", "aventura"],
   "mainGenre": "fantasy",
   "language": "english"
 }
+
+### Find One Story by slug
+# @name findStoryBySlug
+GET {{baseUrl}}/story/the-last-kingdom

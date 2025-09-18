@@ -42,16 +42,15 @@ export class CreateStoryDto {
   language: StoryLanguage;
 
   @IsString()
-  @IsOptional()
-  synopsis?: string;
+  @IsNotEmpty()
+  synopsis: string;
 
   @IsEnum(StoryStatus)
   @IsOptional()
   status?: StoryStatus;
 
   @IsArray()
-  @IsOptional()
-  tags?: string[];
+  tags: string[];
 
   @IsNumber()
   @Min(0)

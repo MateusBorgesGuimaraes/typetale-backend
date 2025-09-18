@@ -71,14 +71,14 @@ export class Story {
   @Column({ type: 'text' })
   language: StoryLanguage;
 
-  @Column({ nullable: true })
-  synopsis?: string;
+  @Column({ type: 'text' })
+  synopsis: string;
 
   @Column({ type: 'text', default: StoryStatus.ONGOING })
   status: StoryStatus;
 
-  @Column({ type: 'simple-array', nullable: true })
-  tags?: string[];
+  @Column({ type: 'simple-array' })
+  tags: string[];
 
   @Column({ default: 0 })
   chaptersCount: number;
