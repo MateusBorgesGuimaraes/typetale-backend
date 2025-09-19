@@ -6,12 +6,13 @@ export class ResponseStoryDto {
   readonly slug: string;
   readonly coverUrl: string;
   readonly synopsis: string;
+  readonly storyTypre: string;
   readonly mainGenre: string;
   readonly tags: string[];
   readonly ratingAvg?: number;
   readonly ratingCount: number;
   readonly createdAt: Date;
-  readonly author: {
+  readonly author?: {
     id: string;
     username: string;
     email: string;
@@ -23,17 +24,20 @@ export class ResponseStoryDto {
     this.title = story.title;
     this.slug = story.slug;
     this.coverUrl = story.coverUrl;
+    this.storyTypre = story.storyType;
     this.mainGenre = story.mainGenre;
     this.ratingAvg = story.ratingAvg;
     this.tags = story.tags;
     this.ratingCount = story.ratingCount;
     this.synopsis = story.synopsis;
     this.createdAt = story.createdAt;
-    this.author = {
-      id: story.author.id,
-      username: story.author.username,
-      email: story.author.email,
-      avatarUrl: story.author.avatarUrl,
-    };
+    if (story.author) {
+      this.author = {
+        id: story.author.id,
+        username: story.author.username,
+        email: story.author.email,
+        avatarUrl: story.author.avatarUrl,
+      };
+    }
   }
 }

@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -29,9 +31,42 @@ export class StoryController {
     return new ResponseStoryDto(story);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async findAllUserStories(@Req() req: AuthenticatedRequest) {
+    const response = await this.storyService.findAllUserStories(req.user.id);
+
+    return {
+      stories: response.stories.map((story) => new ResponseStoryDto(story)),
+      author: response.author,
+    };
+  }
+
   @Get(':slug')
   async findOne(@Param('slug') slug: string) {
     const story = await this.storyService.findOneBySlug(slug);
     return new ResponseStoryDetailsDto(story);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  async updateById(
+    @Param('id') id: string,
+    @Body() updateStoryDto: UpdateStoryDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const story = await this.storyService.updateById(
+      id,
+      updateStoryDto,
+      req.user.id,
+    );
+
+    return new ResponseStoryDto(story);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async deleteById(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return await this.storyService.deleteById(id, req.user.id);
   }
 }

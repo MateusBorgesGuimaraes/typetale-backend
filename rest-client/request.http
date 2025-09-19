@@ -7,7 +7,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "user@email.com",
+  "email": "teste@email.com",
   "password": "123456"
 }
 
@@ -17,14 +17,14 @@ POST {{baseUrl}}/user
 Content-Type: application/json
 
 {
-  "username": "user",
-  "email": "user@email.com",
+  "username": "teste",
+  "email": "teste@email.com",
   "password": "123456",
   "avatarUrl": "urldaimagem"
 }
 
 ### Get one user
-# @name getUserById
+# @name getUserByToken
 GET {{baseUrl}}/user/profile
 Authorization: Bearer {{jwtToken}}
 
@@ -35,10 +35,9 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "The Last Kingdom",
-  "slug": "the-last-kingdom",
-  "coverUrl": "https://example.com/covers/last-kingdom.jpg",
-  "storyType": "original",
+  "title": "Hobbits resolve2",
+  "coverUrl": "https://example.com/covers/hobbbit-resolve.jpg",
+  "storyType": "fanfic",
   "synopsis": "here are the synopsis od the story",
   "tags": ["romanece", "aventura"],
   "mainGenre": "fantasy",
@@ -47,4 +46,24 @@ Content-Type: application/json
 
 ### Find One Story by slug
 # @name findStoryBySlug
-GET {{baseUrl}}/story/the-last-kingdom
+GET {{baseUrl}}/story/The-Last-Kingdom-orgin-1-0ww8q5
+
+### Update Story
+# @name updateStory
+PATCH {{baseUrl}}/story/38273e0d-e095-4fa6-b91e-42fe8af5a2b9
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "title": "The Last Kingdom orgin updated again",
+  "synopsis": "here are the synopsis od the story updated again"
+}
+
+### Delete Story
+DELETE {{baseUrl}}/story/38273e0d-e095-4fa6-b91e-42fe8af5a2b9
+Authorization: Bearer {{jwtToken}}
+
+### Get user stories
+# @name getUserStories
+GET {{baseUrl}}/story/me
+Authorization: Bearer {{jwtToken}}

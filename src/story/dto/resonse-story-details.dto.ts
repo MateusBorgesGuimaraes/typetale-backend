@@ -20,7 +20,7 @@ export class ResponseStoryDetailsDto {
   readonly ratingCount: number;
   readonly createdAt: Date;
   readonly updatedAt: Date;
-  readonly author: {
+  readonly author?: {
     id: string;
     username: string;
     email: string;
@@ -47,11 +47,13 @@ export class ResponseStoryDetailsDto {
     this.ratingCount = story.ratingCount;
     this.createdAt = story.createdAt;
     this.updatedAt = story.updatedAt;
-    this.author = {
-      id: story.author.id,
-      username: story.author.username,
-      email: story.author.email,
-      avatarUrl: story.author.avatarUrl,
-    };
+    if (story.author) {
+      this.author = {
+        id: story.author.id,
+        username: story.author.username,
+        email: story.author.email,
+        avatarUrl: story.author.avatarUrl,
+      };
+    }
   }
 }

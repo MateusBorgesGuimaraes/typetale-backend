@@ -21,10 +21,6 @@ export class CreateStoryDto {
   @IsNotEmpty()
   title: string;
 
-  @IsString()
-  @IsNotEmpty()
-  slug: string;
-
   @IsUrl()
   @IsNotEmpty()
   coverUrl: string;
