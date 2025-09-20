@@ -48,6 +48,10 @@ Content-Type: application/json
 # @name findStoryBySlug
 GET {{baseUrl}}/story/The-Last-Kingdom-orgin-1-0ww8q5
 
+### Find All Stories with pagination and filtering
+# @name findAllStories
+GET {{baseUrl}}/story?page=1&limit=2&storyType=fanfic&&sortOrder=ASC
+
 ### Update Story
 # @name updateStory
 PATCH {{baseUrl}}/story/38273e0d-e095-4fa6-b91e-42fe8af5a2b9

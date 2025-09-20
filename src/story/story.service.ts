@@ -8,9 +8,10 @@ import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Story } from './entities/story.entity';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { createSlug } from 'src/common/utils/create-slug';
+import { StoryFilterDto } from './dto/story-filter.dto';
 
 @Injectable()
 export class StoryService {
@@ -77,6 +78,34 @@ export class StoryService {
     return {
       stories,
       author: new ResponseUserDto(author),
+    };
+  }
+
+  async findWithFilters(filterDto: StoryFilterDto) {
+    const queryBuilder = this.storyRepository
+      .createQueryBuilder('story')
+      .leftJoinAndSelect('story.author', 'author');
+
+    this.applyFilters(queryBuilder, filterDto);
+
+    this.applySorting(queryBuilder, filterDto.sortBy, filterDto.sortOrder);
+
+    const offset = (filterDto.page - 1) * filterDto.limit;
+    const [data, total] = await queryBuilder
+      .skip(offset)
+      .take(filterDto.limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      meta: {
+        total,
+        page: filterDto.page,
+        limit: filterDto.limit,
+        totalPages: Math.ceil(total / filterDto.limit),
+        hasNextPage: filterDto.page < Math.ceil(total / filterDto.limit),
+        hasPreviousPage: filterDto.page > 1,
+      },
     };
   }
 
@@ -158,5 +187,108 @@ export class StoryService {
     return {
       message: 'Story deleted successfully',
     };
+  }
+
+  private applyFilters(
+    queryBuilder: SelectQueryBuilder<Story>,
+    filters: StoryFilterDto,
+  ): void {
+    const {
+      title,
+      slug,
+      storyType,
+      mainGenre,
+      language,
+      status,
+      tags,
+      chaptersCount,
+      followersCount,
+      viewsCount,
+      ratingAvg,
+      search,
+    } = filters;
+
+    if (search) {
+      queryBuilder.andWhere(
+        '(story.title ILIKE :search OR story.synopsis ILIKE :search OR author.username ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    if (title) {
+      queryBuilder.andWhere('story.title ILIKE :title', {
+        title: `%${title}%`,
+      });
+    }
+
+    if (slug) {
+      queryBuilder.andWhere('story.slug = :slug', { slug });
+    }
+
+    if (storyType) {
+      queryBuilder.andWhere('story.storyType = :storyType', { storyType });
+    }
+
+    if (mainGenre) {
+      queryBuilder.andWhere('story.mainGenre = :mainGenre', { mainGenre });
+    }
+
+    if (language) {
+      queryBuilder.andWhere('story.language = :language', { language });
+    }
+
+    if (status) {
+      queryBuilder.andWhere('story.status = :status', { status });
+    }
+
+    if (tags && tags.length > 0) {
+      queryBuilder.andWhere('story.tags && :tags', { tags });
+    }
+
+    if (chaptersCount !== undefined) {
+      queryBuilder.andWhere('story.chaptersCount >= :chaptersCount', {
+        chaptersCount,
+      });
+    }
+
+    if (followersCount !== undefined) {
+      queryBuilder.andWhere('story.followersCount >= :followersCount', {
+        followersCount,
+      });
+    }
+
+    if (viewsCount !== undefined) {
+      queryBuilder.andWhere('story.viewsCount >= :viewsCount', { viewsCount });
+    }
+
+    if (ratingAvg !== undefined) {
+      queryBuilder.andWhere('story.ratingAvg >= :ratingAvg', { ratingAvg });
+    }
+  }
+
+  private applySorting(
+    queryBuilder: SelectQueryBuilder<Story>,
+    sortBy: string = 'createdAt',
+    sortOrder: 'ASC' | 'DESC' = 'DESC',
+  ): void {
+    const allowedSortFields = [
+      'id',
+      'title',
+      'createdAt',
+      'updatedAt',
+      'chaptersCount',
+      'followersCount',
+      'viewsCount',
+      'ratingAvg',
+      'ratingCount',
+    ];
+
+    if (allowedSortFields.includes(sortBy)) {
+      queryBuilder.orderBy(`story.${sortBy}`, sortOrder);
+    } else {
+      queryBuilder.orderBy('story.createdAt', 'DESC');
+    }
+
+    queryBuilder.addOrderBy('story.id', 'ASC');
   }
 }

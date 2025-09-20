@@ -23,7 +23,7 @@
 - [x] `PATCH /story/:id` → editar história
 - [x] `DELETE /story/:id` → deletar história
 - [x] `GET /story/me` → buscar histórias do usuario
-- [ ] `GET /story` → lista com filtros, ordenação e paginação
+- [x] `GET /story` → lista com filtros, ordenação e paginação
 - [ ] `GET /story/:id/recommendations` → recomendações de histórias
 - [ ] `GET /story/rankings` → rankings
 - [ ] `GET /story/editor-picks` → escolhas do editor
