@@ -6,6 +6,8 @@ import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StoryModule } from './story/story.module';
+import { VolumeModule } from './volume/volume.module';
+import { ChapterModule } from './chapter/chapter.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { StoryModule } from './story/story.module';
       autoLoadEntities: process.env.DB_AUTO_LOAD_ENTITIES === '1',
     }),
     StoryModule,
+    VolumeModule,
+    ChapterModule,
   ],
   controllers: [AppController],
   providers: [AppService],

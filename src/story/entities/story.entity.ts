@@ -1,9 +1,12 @@
+import { Chapter } from 'src/chapter/entities/chapter.entity';
 import { User } from 'src/user/entities/user.entity';
+import { Volume } from 'src/volume/entities/volume.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -106,7 +109,10 @@ export class Story {
 
   @UpdateDateColumn()
   updatedAt: Date;
-}
 
-// HISTORY A RELAÇÃO É MANY TO ONE -> Muitas historias podem ter o mesmo autor
-// USER A RELAÇÃO É ONE TO MANY -> UM USUARIO PODE TER Várias Historias
+  @OneToMany(() => Volume, (volume) => volume.story)
+  volumes: Volume[];
+
+  @OneToMany(() => Chapter, (chapter) => chapter.story)
+  chapters: Chapter[];
+}
