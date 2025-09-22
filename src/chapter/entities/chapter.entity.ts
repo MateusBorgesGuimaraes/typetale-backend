@@ -15,9 +15,6 @@ export class Chapter {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Story, (story) => story.chapters, { onDelete: 'CASCADE' })
-  story: Story;
-
   @ManyToOne(() => Volume, (volume) => volume.chapters, {
     onDelete: 'SET NULL',
     nullable: true,

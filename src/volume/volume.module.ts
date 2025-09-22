@@ -4,9 +4,10 @@ import { VolumeController } from './volume.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Volume } from './entities/volume.entity';
 import { Story } from 'src/story/entities/story.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Volume, Story])],
+  imports: [TypeOrmModule.forFeature([Volume, Story, User])],
   controllers: [VolumeController],
   providers: [VolumeService],
 })

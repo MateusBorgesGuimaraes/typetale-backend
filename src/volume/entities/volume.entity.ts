@@ -22,14 +22,14 @@ export class Volume {
   @Column()
   title: string;
 
-  @Column()
+  @Column({ default: 0 })
   chaptersCount: number;
 
   @Column()
   description?: string;
 
   @Column({ type: 'float' })
-  position: number; // ordem dos volumes dentro da história
+  position: number;
 
   @OneToMany(() => Chapter, (chapter) => chapter.volume)
   chapters: Chapter[];

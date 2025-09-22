@@ -31,15 +31,21 @@
 
 ---
 
-### 📚 Chapter & Volume
+### 📚 Volume
 
-- [ ] `POST /story/:id/volume` → criar volume
-- [ ] `POST /story/:id/chapter` → criar capítulo
-- [ ] `PATCH /chapter/:id` → editar capítulo
-- [ ] `PATCH /chapter/reorder` → reordenar capítulos (fractional indexing)
-- [ ] `DELETE /chapter/:id` → deletar capítulo
-- [ ] `GET /story/:id/chapters` → listar capítulos
-- [ ] `GET /chapter/:id` → buscar capítulo
+- [x] `POST /volume/create/:storyId` → criar volume
+- [x] `GET /volume/all/:storyId` → buscar todos os volumes da historia
+- [ ] `PATCH /volume/:volumeId` → editar volume
+- [ ] `DELETE /volume/:volumeId` → deletar capítulo
+
+---
+
+### 📚 Chapter
+
+- [x] `POST /chapter/create/:volumeId` → criar capitulo
+- [x] `GET /chapter/volume/:volumeId` → buscar todos os capitulos do volume
+- [ ] `PATCH /chapter/:volumeId` → editar volume
+- [ ] `DELETE /chapter/:volumeId` → deletar capítulo
 
 ---
 

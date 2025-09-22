@@ -4,9 +4,10 @@ import { ChapterController } from './chapter.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Chapter } from './entities/chapter.entity';
 import { Volume } from 'src/volume/entities/volume.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Chapter, Volume])],
+  imports: [TypeOrmModule.forFeature([Chapter, Volume, User])],
   controllers: [ChapterController],
   providers: [ChapterService],
 })

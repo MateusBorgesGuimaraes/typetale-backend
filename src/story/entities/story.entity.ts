@@ -1,4 +1,3 @@
-import { Chapter } from 'src/chapter/entities/chapter.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Volume } from 'src/volume/entities/volume.entity';
 import {
@@ -112,7 +111,4 @@ export class Story {
 
   @OneToMany(() => Volume, (volume) => volume.story)
   volumes: Volume[];
-
-  @OneToMany(() => Chapter, (chapter) => chapter.story)
-  chapters: Chapter[];
 }
