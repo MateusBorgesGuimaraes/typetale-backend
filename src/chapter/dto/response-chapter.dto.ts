@@ -13,7 +13,7 @@ export class ResponseChapterDto {
   readonly viewsCount: number;
   readonly createdAt: Date;
   readonly updatedAt: Date;
-  readonly volume?: {
+  readonly volume: {
     id: number;
     title: string;
     position: number;
@@ -31,12 +31,10 @@ export class ResponseChapterDto {
     this.viewsCount = chapter.viewsCount;
     this.createdAt = chapter.createdAt;
     this.updatedAt = chapter.updatedAt;
-    if (chapter.volume) {
-      this.volume = {
-        id: chapter.volume.id,
-        title: chapter.volume.title,
-        position: chapter.volume.position,
-      };
-    }
+    this.volume = {
+      id: chapter.volume.id,
+      title: chapter.volume.title,
+      position: chapter.volume.position,
+    };
   }
 }

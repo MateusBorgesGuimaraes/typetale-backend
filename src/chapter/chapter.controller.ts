@@ -27,16 +27,21 @@ export class ChapterController {
     @Body() createChapterDto: CreateChapterDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.chapterService.createChapter(
+    const chapter = await this.chapterService.createChapter(
       volumeId,
       req.user.id,
       createChapterDto,
     );
+    return new ResponseChapterDto(chapter);
   }
 
   @Get('volume/:volumeId')
   async findAllChaptersInVolume(@Param('volumeId') volumeId: string) {
-    return this.chapterService.findAllChaptersInVolume(volumeId);
+    const res = await this.chapterService.findAllChaptersInVolume(volumeId);
+    return {
+      volume: res.volume,
+      chapters: res.chapters.map((chapter) => new ResponseChapterDto(chapter)),
+    };
   }
 
   @Get(':id')

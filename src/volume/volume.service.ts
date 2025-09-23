@@ -9,6 +9,8 @@ import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import { Volume } from './entities/volume.entity';
 import { CreateVolumeDto } from './dto/create-volume.dto';
+import { UpdateVolumeDto } from './dto/update-volume.dto';
+import { title } from 'process';
 
 @Injectable()
 export class VolumeService {
@@ -33,6 +35,7 @@ export class VolumeService {
       where: { id: storyId },
       relations: ['author'],
     });
+
     if (!story) {
       throw new NotFoundException('Story not found');
     }
@@ -56,5 +59,51 @@ export class VolumeService {
       where: { story: { id: storyId } },
     });
     return volumes;
+  }
+
+  async findAllVolumesWithChapters(storyId: string) {
+    const volumes = await this.volumeRepository.find({
+      where: { story: { id: storyId } },
+      relations: ['chapters'],
+    });
+    return volumes;
+  }
+
+  async findOneVolume(volumeId: string) {
+    const volume = await this.volumeRepository.findOneBy({ id: +volumeId });
+    if (!volume) {
+      throw new NotFoundException('Volume not found');
+    }
+    return volume;
+  }
+
+  async updateVolume(
+    volumeId: string,
+    userId: string,
+    updatedVolume: UpdateVolumeDto,
+  ) {
+    const volume = await this.volumeRepository.findOne({
+      where: { id: +volumeId },
+      relations: ['story', 'story.author'],
+    });
+
+    if (!volume) {
+      throw new NotFoundException('Volume not found');
+    }
+
+    if (!volume.story) {
+      throw new NotFoundException('Story not found');
+    }
+
+    if (volume.story.author.id !== userId) {
+      throw new ForbiddenException('You are not the author of this story');
+    }
+
+    volume.title = updatedVolume.title ?? volume.title;
+    volume.description = updatedVolume.description ?? volume.description;
+
+    await this.volumeRepository.save(volume);
+
+    return volume;
   }
 }

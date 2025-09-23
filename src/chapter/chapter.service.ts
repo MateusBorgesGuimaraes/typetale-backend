@@ -52,16 +52,28 @@ export class ChapterService {
     return this.chapterRepository.save(chapter);
   }
 
-  async findAllChaptersInVolume(volumeId: string) {
+  async findAllChaptersInVolume(
+    volumeId: string,
+  ): Promise<{ volume: Partial<Volume>; chapters: Chapter[] }> {
     const volume = await this.volumeRepository.findOneBy({
       id: parseInt(volumeId),
     });
     if (!volume) {
       throw new NotFoundException('Volume not found');
     }
-    return this.chapterRepository.find({
+    const chapters = await this.chapterRepository.find({
       where: { volume: { id: volume.id } },
     });
+
+    return {
+      volume: {
+        id: volume.id,
+        title: volume.title,
+        description: volume.description,
+        position: volume.position,
+      },
+      chapters: chapters,
+    };
   }
 
   async findOneChapter(chapterId: string) {

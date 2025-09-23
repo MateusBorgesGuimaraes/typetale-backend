@@ -6,12 +6,14 @@ import {
   UseGuards,
   Body,
   Get,
+  Patch,
 } from '@nestjs/common';
 import { VolumeService } from './volume.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from 'src/auth/types/authenticated-request';
 import { CreateVolumeDto } from './dto/create-volume.dto';
 import { ResponseVolumeDto } from './dto/response-volume.dto';
+import { UpdateVolumeDto } from './dto/update-volume.dto';
 
 @Controller('volume')
 export class VolumeController {
@@ -24,16 +26,45 @@ export class VolumeController {
     @Req() req: AuthenticatedRequest,
     @Body() createVolumeDto: CreateVolumeDto,
   ) {
-    return this.volumeService.createVolume(
+    const volume = await this.volumeService.createVolume(
       storyId,
       req.user.id,
       createVolumeDto,
     );
+    return new ResponseVolumeDto(volume);
+  }
+
+  @Get('/:volumeId')
+  async findOneVolume(@Param('volumeId') volumeId: string) {
+    const volume = await this.volumeService.findOneVolume(volumeId);
+    return new ResponseVolumeDto(volume);
   }
 
   @Get('/all/:storyId')
   async findAllVolumes(@Param('storyId') storyId: string) {
     const volumes = await this.volumeService.findAllVolumes(storyId);
     return volumes.map((volume) => new ResponseVolumeDto(volume));
+  }
+
+  @Get('/all-with-chapters/:storyId')
+  async findAllVolumesWithChapters(@Param('storyId') storyId: string) {
+    const volumes =
+      await this.volumeService.findAllVolumesWithChapters(storyId);
+    return volumes.map((volume) => new ResponseVolumeDto(volume));
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('/:volumeId')
+  async updateVolume(
+    @Param('volumeId') volumeId: string,
+    @Body() updatedVolume: UpdateVolumeDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const volume = await this.volumeService.updateVolume(
+      volumeId,
+      req.user.id,
+      updatedVolume,
+    );
+    return new ResponseVolumeDto(volume);
   }
 }

@@ -16,10 +16,10 @@ export class Chapter {
   id: number;
 
   @ManyToOne(() => Volume, (volume) => volume.chapters, {
-    onDelete: 'SET NULL',
-    nullable: true,
+    onDelete: 'CASCADE',
+    nullable: false,
   })
-  volume?: Volume;
+  volume: Volume;
 
   @Column()
   title: string;

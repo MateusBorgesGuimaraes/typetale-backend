@@ -79,14 +79,34 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "The Last Kingdom orgin volume title 2",
-  "description": "here are the synopsis od the story updated again 2",
-  "position": 2
+  "title": "So far away",
+  "description": "Here is the description of volume 4",
+  "position": 4
 }
+
+### Update Volume
+PATCH  {{baseUrl}}/volume/4
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "title": "So far away updated again",
+  "description": "Here is the description of volume 4 updated again"
+}
+
+### Get Volume by Id
+# @name getVolumeById
+GET {{baseUrl}}/volume/1
+Authorization: Bearer {{jwtToken}}
 
 ### Get Volumes by Story
 # @name getVolumesByStory
 GET {{baseUrl}}/volume/all/7be69342-86f7-4b79-8012-f2f29b3078e5
+Authorization: Bearer {{jwtToken}}
+
+### Get Volumes with Chapters by Story
+# @name getVolumesWithChaptersByStory
+GET {{baseUrl}}/volume/all-with-chapters/7be69342-86f7-4b79-8012-f2f29b3078e5
 Authorization: Bearer {{jwtToken}}
 
 ### Create Chapter
@@ -96,13 +116,18 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-   "title": "Chapter 2 - War begins",
-   "content": "Here is the content of chapter 2",
+   "title": "Chapter 4 - Nobody Helps",
+   "content": "Here is the content of chapter 4",
    "isDraft": false,
-   "position": 2
+   "position": 4
 }
 
 ### Get Chapters by Volume
 # @name getChaptersByVolume
 GET {{baseUrl}}/chapter/volume/1
+Authorization: Bearer {{jwtToken}}
+
+### Get Chapter by Id
+# @name getChapterById
+GET {{baseUrl}}/chapter/1
 Authorization: Bearer {{jwtToken}}
