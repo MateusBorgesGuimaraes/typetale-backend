@@ -7,7 +7,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "teste@email.com",
+  "email": "user@email.com",
   "password": "123456"
 }
 
@@ -17,8 +17,8 @@ POST {{baseUrl}}/user
 Content-Type: application/json
 
 {
-  "username": "teste",
-  "email": "teste@email.com",
+  "username": "user",
+  "email": "user@email.com",
   "password": "123456",
   "avatarUrl": "urldaimagem"
 }
@@ -35,7 +35,7 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "Hobbits resolve2",
+  "title": "Hobbits resolve",
   "coverUrl": "https://example.com/covers/hobbbit-resolve.jpg",
   "storyType": "fanfic",
   "synopsis": "here are the synopsis od the story",
@@ -46,7 +46,7 @@ Content-Type: application/json
 
 ### Find One Story by slug
 # @name findStoryBySlug
-GET {{baseUrl}}/story/The-Last-Kingdom-orgin-1-0ww8q5
+GET {{baseUrl}}/story/Hobbits-resolve-9gzhc0
 
 ### Find All Stories with pagination and filtering
 # @name findAllStories
@@ -54,13 +54,13 @@ GET {{baseUrl}}/story?page=1&limit=2&storyType=fanfic&&sortOrder=ASC
 
 ### Update Story
 # @name updateStory
-PATCH {{baseUrl}}/story/38273e0d-e095-4fa6-b91e-42fe8af5a2b9
+PATCH {{baseUrl}}/story/5cdd27a8-9820-44a3-aa45-2164121cb543
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "The Last Kingdom orgin updated again",
-  "synopsis": "here are the synopsis od the story updated again"
+  "title": "Hobbits resolve 2",
+  "synopsis": "here are the synopsis od the story"
 }
 
 ### Delete Story
@@ -74,34 +74,33 @@ Authorization: Bearer {{jwtToken}}
 
 ### Create Volume
 # @name createVolume
-POST {{baseUrl}}/volume/create/7be69342-86f7-4b79-8012-f2f29b3078e5
+POST {{baseUrl}}/volume/create/05350656-0bf1-4175-85f4-59c9aa1c68a9
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
   "title": "So far away",
-  "description": "Here is the description of volume 4",
-  "position": 4
+  "description": "Here is the description of volume 1",
+  "position": 1
 }
 
 ### Update Volume
-PATCH  {{baseUrl}}/volume/4
+PATCH  {{baseUrl}}/volume/fde43722-2a18-44e4-b26d-900d10949f9c
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "So far away updated again",
-  "description": "Here is the description of volume 4 updated again"
+  "description": "Here is the description of volume 1"
 }
 
 ### Get Volume by Id
 # @name getVolumeById
-GET {{baseUrl}}/volume/1
+GET {{baseUrl}}/volume/fde43722-2a18-44e4-b26d-900d10949f9c
 Authorization: Bearer {{jwtToken}}
 
 ### Get Volumes by Story
 # @name getVolumesByStory
-GET {{baseUrl}}/volume/all/7be69342-86f7-4b79-8012-f2f29b3078e5
+GET {{baseUrl}}/volume/all/5cdd27a8-9820-44a3-aa45-2164121cb543
 Authorization: Bearer {{jwtToken}}
 
 ### Get Volumes with Chapters by Story
@@ -111,23 +110,32 @@ Authorization: Bearer {{jwtToken}}
 
 ### Create Chapter
 # @name createChapter
-POST {{baseUrl}}/chapter/create/1
+POST {{baseUrl}}/chapter/create/db69f898-5396-4cd1-962e-1d2be8626254
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-   "title": "Chapter 4 - Nobody Helps",
-   "content": "Here is the content of chapter 4",
-   "isDraft": false,
-   "position": 4
+   "title": "Chapter 5 - The journey",
+   "content": "Here is the content of chapter 5",
+   "isDraft": false
 }
 
-### Get Chapters by Volume
+### Get Chapters by Volume OBS: tirar da reposta o volume que vem com os chapters
 # @name getChaptersByVolume
-GET {{baseUrl}}/chapter/volume/1
+GET {{baseUrl}}/chapter/volume/db69f898-5396-4cd1-962e-1d2be8626254
 Authorization: Bearer {{jwtToken}}
 
 ### Get Chapter by Id
 # @name getChapterById
 GET {{baseUrl}}/chapter/1
 Authorization: Bearer {{jwtToken}}
+
+### Reorder chapter
+PATCH {{baseUrl}}/chapter/53579d21-0534-4f91-ba9d-2854874530aa/reorder
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "beforeChapterId": "5b6ee670-fa2b-4230-9816-d34c7493f570",
+  "afterChapterId": "820192a6-ae48-4c78-a3b1-1132c5c451fe"
+}

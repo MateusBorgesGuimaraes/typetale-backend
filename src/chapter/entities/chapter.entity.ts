@@ -12,8 +12,8 @@ import {
 
 @Entity('chapters')
 export class Chapter {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ManyToOne(() => Volume, (volume) => volume.chapters, {
     onDelete: 'CASCADE',
@@ -34,8 +34,9 @@ export class Chapter {
   @Column({ default: false })
   isDraft: boolean;
 
-  @Column({ type: 'float' })
-  position: number;
+  @Column({ type: 'varchar', length: 100 })
+  @Index()
+  position: string;
 
   @Column({ nullable: true })
   publishedAt?: Date;

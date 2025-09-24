@@ -70,7 +70,7 @@ export class VolumeService {
   }
 
   async findOneVolume(volumeId: string) {
-    const volume = await this.volumeRepository.findOneBy({ id: +volumeId });
+    const volume = await this.volumeRepository.findOneBy({ id: volumeId });
     if (!volume) {
       throw new NotFoundException('Volume not found');
     }
@@ -83,7 +83,7 @@ export class VolumeService {
     updatedVolume: UpdateVolumeDto,
   ) {
     const volume = await this.volumeRepository.findOne({
-      where: { id: +volumeId },
+      where: { id: volumeId },
       relations: ['story', 'story.author'],
     });
 

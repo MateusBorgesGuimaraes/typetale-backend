@@ -2,7 +2,7 @@ import { Volume } from '../entities/volume.entity';
 import { Chapter } from 'src/chapter/entities/chapter.entity';
 
 export class ResponseVolumeDto {
-  readonly id: number;
+  readonly id: string;
   readonly title: string;
   readonly chaptersCount: number;
   readonly description?: string;
@@ -10,9 +10,9 @@ export class ResponseVolumeDto {
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly chapters?: {
-    id: number;
+    id: string;
     title: string;
-    position: number;
+    position: string;
   }[];
 
   constructor(volume: Volume) {

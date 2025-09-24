@@ -13,8 +13,8 @@ import { Chapter } from 'src/chapter/entities/chapter.entity';
 
 @Entity('volumes')
 export class Volume {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @ManyToOne(() => Story, (story) => story.volumes, { onDelete: 'CASCADE' })
   story: Story;

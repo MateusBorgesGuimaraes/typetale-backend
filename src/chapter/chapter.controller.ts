@@ -15,6 +15,7 @@ import { UpdateChapterDto } from './dto/update-chapter.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from 'src/auth/types/authenticated-request';
 import { ResponseChapterDto } from './dto/response-chapter.dto';
+import { ReorderChapterDto } from './dto/reorder-chapter.dto';
 
 @Controller('chapter')
 export class ChapterController {
@@ -42,6 +43,17 @@ export class ChapterController {
       volume: res.volume,
       chapters: res.chapters.map((chapter) => new ResponseChapterDto(chapter)),
     };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/reorder')
+  async reorderChapter(
+    @Param('id') id: string,
+    @Body() reorderDto: ReorderChapterDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.id;
+    return this.chapterService.reorderChapter(id, userId, reorderDto);
   }
 
   @Get(':id')
