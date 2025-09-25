@@ -7,7 +7,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "user@email.com",
+  "email": "redator@email.com",
   "password": "123456"
 }
 
@@ -17,8 +17,8 @@ POST {{baseUrl}}/user
 Content-Type: application/json
 
 {
-  "username": "user",
-  "email": "user@email.com",
+  "username": "redator",
+  "email": "redator@email.com",
   "password": "123456",
   "avatarUrl": "urldaimagem"
 }
@@ -64,7 +64,7 @@ Content-Type: application/json
 }
 
 ### Delete Story
-DELETE {{baseUrl}}/story/38273e0d-e095-4fa6-b91e-42fe8af5a2b9
+DELETE {{baseUrl}}/story/05350656-0bf1-4175-85f4-59c9aa1c68a9
 Authorization: Bearer {{jwtToken}}
 
 ### Get user stories
@@ -108,6 +108,11 @@ Authorization: Bearer {{jwtToken}}
 GET {{baseUrl}}/volume/all-with-chapters/7be69342-86f7-4b79-8012-f2f29b3078e5
 Authorization: Bearer {{jwtToken}}
 
+### Delete Volume
+# @name deleteVolume
+DELETE {{baseUrl}}/volume/db69f898-5396-4cd1-962e-1d2be8626254
+Authorization: Bearer {{jwtToken}}
+
 ### Create Chapter
 # @name createChapter
 POST {{baseUrl}}/chapter/create/db69f898-5396-4cd1-962e-1d2be8626254
@@ -120,14 +125,14 @@ Content-Type: application/json
    "isDraft": false
 }
 
-### Get Chapters by Volume OBS: tirar da reposta o volume que vem com os chapters
+### Get Chapters by Volume OBS
 # @name getChaptersByVolume
 GET {{baseUrl}}/chapter/volume/db69f898-5396-4cd1-962e-1d2be8626254
 Authorization: Bearer {{jwtToken}}
 
 ### Get Chapter by Id
 # @name getChapterById
-GET {{baseUrl}}/chapter/1
+GET {{baseUrl}}/chapter/820192a6-ae48-4c78-a3b1-1132c5c451fe
 Authorization: Bearer {{jwtToken}}
 
 ### Reorder chapter
@@ -139,3 +144,58 @@ Content-Type: application/json
   "beforeChapterId": "5b6ee670-fa2b-4230-9816-d34c7493f570",
   "afterChapterId": "820192a6-ae48-4c78-a3b1-1132c5c451fe"
 }
+
+
+### Update Chapter
+PATCH {{baseUrl}}/chapter/546d5f5a-c81a-40d8-a7b2-d816c1fbf666
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "content": "Here is the updated content of chapter 1 updated"
+}
+
+### Delete Chapter
+DELETE {{baseUrl}}/chapter/f4bfea94-9845-434b-9b41-b20b78c71c78
+Authorization: Bearer {{jwtToken}}
+
+### Create Announcement (Publisher)
+# @name createAnnouncement
+POST {{baseUrl}}/announcement
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "title": "Segundo anúncio",
+  "image": "https://example.com/image.jpg",
+  "content": "Conteúdo do anúncio."
+}
+
+# # Announcement - Buscar por id (Pública)
+# # @name getAnnouncementById
+# GET {{baseUrl}}/announcement/{{announcementId}}
+
+# # Announcement - Buscar todos ativos (Pública)
+# # @name getActiveAnnouncements
+# GET {{baseUrl}}/announcement
+
+# # Announcement - Buscar todos (Publisher)
+# # @name getAllAnnouncements
+# GET {{baseUrl}}/announcement/all
+# Authorization: Bearer {{jwtToken}}
+
+# # Announcement - Atualizar (Publisher)
+# # @name updateAnnouncement
+# PATCH {{baseUrl}}/announcement/{{announcementId}}
+# Authorization: Bearer {{jwtToken}}
+# Content-Type: application/json
+
+# {
+#   "title": "Título atualizado do anúncio",
+#   "isActive": true
+# }
+
+# # Announcement - Deletar (Publisher)
+# # @name deleteAnnouncement
+# DELETE {{baseUrl}}/announcement/{{announcementId}}
+# Authorization: Bearer {{jwtToken}}

@@ -106,4 +106,21 @@ export class VolumeService {
 
     return volume;
   }
+
+  async removeVolume(volumeId: string, userId: string) {
+    const volume = await this.volumeRepository.findOne({
+      where: { id: volumeId },
+      relations: ['story', 'story.author'],
+    });
+    if (!volume) {
+      throw new NotFoundException('Volume not found');
+    }
+    if (!volume.story) {
+      throw new NotFoundException('Story not found');
+    }
+    if (volume.story.author.id !== userId) {
+      throw new ForbiddenException('You are not the author of this story');
+    }
+    await this.volumeRepository.remove(volume);
+  }
 }

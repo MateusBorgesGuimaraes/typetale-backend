@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { StoryModule } from './story/story.module';
 import { VolumeModule } from './volume/volume.module';
 import { ChapterModule } from './chapter/chapter.module';
+import { AnnouncementModule } from './announcement/announcement.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ChapterModule } from './chapter/chapter.module';
     StoryModule,
     VolumeModule,
     ChapterModule,
+    AnnouncementModule,
   ],
   controllers: [AppController],
   providers: [AppService],

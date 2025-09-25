@@ -16,6 +16,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from 'src/auth/types/authenticated-request';
 import { ResponseChapterDto } from './dto/response-chapter.dto';
 import { ReorderChapterDto } from './dto/reorder-chapter.dto';
+import { SimpleResponseChapterDto } from './dto/simple-response-chapter.dto';
 
 @Controller('chapter')
 export class ChapterController {
@@ -41,7 +42,9 @@ export class ChapterController {
     const res = await this.chapterService.findAllChaptersInVolume(volumeId);
     return {
       volume: res.volume,
-      chapters: res.chapters.map((chapter) => new ResponseChapterDto(chapter)),
+      chapters: res.chapters.map(
+        (chapter) => new SimpleResponseChapterDto(chapter),
+      ),
     };
   }
 
@@ -60,5 +63,30 @@ export class ChapterController {
   async findOneChapter(@Param('id') id: string) {
     const chapter = await this.chapterService.findOneChapter(id);
     return new ResponseChapterDto(chapter);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  async updateChapter(
+    @Param('id') id: string,
+    @Body() updateChapterDto: UpdateChapterDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const chapter = await this.chapterService.updateChapter(
+      id,
+      req.user.id,
+      updateChapterDto,
+    );
+    return new ResponseChapterDto(chapter);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async removeChapter(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    await this.chapterService.removeChapter(id, req.user.id);
+    return { message: 'Chapter deleted successfully' };
   }
 }

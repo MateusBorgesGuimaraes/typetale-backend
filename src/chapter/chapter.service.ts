@@ -187,4 +187,55 @@ export class ChapterService {
     }
     return chapter;
   }
+
+  async updateChapter(
+    chapterId: string,
+    authorId: string,
+    updateChapterDto: UpdateChapterDto,
+  ) {
+    const user = await this.userRepository.findOneBy({ id: authorId });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const chapter = await this.chapterRepository.findOne({
+      where: { id: chapterId },
+      relations: ['volume', 'volume.story', 'volume.story.author'],
+    });
+    if (!chapter) {
+      throw new NotFoundException('Chapter not found');
+    }
+    if (chapter.volume.story.author.id !== authorId) {
+      throw new ForbiddenException('You are not the author of this story');
+    }
+
+    chapter.title = updateChapterDto.title ?? chapter.title;
+    chapter.content = updateChapterDto.content ?? chapter.content;
+    chapter.isDraft = updateChapterDto.isDraft ?? chapter.isDraft;
+    chapter.slug = updateChapterDto.title
+      ? createSlug(updateChapterDto.title)
+      : chapter.slug;
+    chapter.wordsCount = updateChapterDto.content
+      ? countWords(updateChapterDto.content)
+      : chapter.wordsCount;
+
+    if (chapter.isDraft && updateChapterDto.isDraft === false) {
+      chapter.publishedAt = new Date();
+    }
+    return this.chapterRepository.save(chapter);
+  }
+
+  async removeChapter(chapterId: string, authorId: string) {
+    const chapter = await this.chapterRepository.findOne({
+      where: { id: chapterId },
+      relations: ['volume', 'volume.story', 'volume.story.author'],
+    });
+    if (!chapter) {
+      throw new NotFoundException('Chapter not found');
+    }
+    if (chapter.volume.story.author.id !== authorId) {
+      throw new ForbiddenException('You are not the author of this story');
+    }
+    return this.chapterRepository.remove(chapter);
+  }
 }

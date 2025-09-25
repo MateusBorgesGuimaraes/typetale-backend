@@ -7,6 +7,7 @@ import {
   Body,
   Get,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { VolumeService } from './volume.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -66,5 +67,15 @@ export class VolumeController {
       updatedVolume,
     );
     return new ResponseVolumeDto(volume);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('/:volumeId')
+  async removeVolume(
+    @Param('volumeId') volumeId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    await this.volumeService.removeVolume(volumeId, req.user.id);
+    return { message: 'Volume deleted successfully' };
   }
 }
