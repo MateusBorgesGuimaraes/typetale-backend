@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { AnnouncementService } from './announcement.service';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
@@ -18,10 +19,18 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import type { AuthenticatedRequest } from 'src/auth/types/authenticated-request';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('announcement')
 export class AnnouncementController {
   constructor(private readonly announcementService: AnnouncementService) {}
+
+  @Get('all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('publisher')
+  async findAll(@Query() paginationDto: PaginationDto) {
+    return this.announcementService.findAll(paginationDto);
+  }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -31,13 +40,6 @@ export class AnnouncementController {
   @Get()
   async findAllActive() {
     return this.announcementService.findAllActive();
-  }
-
-  @Get('all')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('publisher')
-  async findAll() {
-    return this.announcementService.findAll();
   }
 
   @Post()
@@ -67,5 +69,6 @@ export class AnnouncementController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     await this.announcementService.remove(id, req.user.id);
+    return { message: 'Announcement deleted successfully' };
   }
 }

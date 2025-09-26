@@ -49,8 +49,12 @@ Content-Type: application/json
 GET {{baseUrl}}/story/Hobbits-resolve-9gzhc0
 
 ### Find All Stories with pagination and filtering
-# @name findAllStories
+# @name findAllStoriesPaginatedAndFiltered
 GET {{baseUrl}}/story?page=1&limit=2&storyType=fanfic&&sortOrder=ASC
+
+### Find All Stories with pagination
+# @name findAllStoriesPaginated
+GET {{baseUrl}}/story?page=1&limit=2
 
 ### Update Story
 # @name updateStory
@@ -74,7 +78,7 @@ Authorization: Bearer {{jwtToken}}
 
 ### Create Volume
 # @name createVolume
-POST {{baseUrl}}/volume/create/05350656-0bf1-4175-85f4-59c9aa1c68a9
+POST {{baseUrl}}/volume/create/32904092-0650-494e-bdff-68473b0227ae
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
@@ -115,13 +119,13 @@ Authorization: Bearer {{jwtToken}}
 
 ### Create Chapter
 # @name createChapter
-POST {{baseUrl}}/chapter/create/db69f898-5396-4cd1-962e-1d2be8626254
+POST {{baseUrl}}/chapter/create/f2e941ec-9f49-46c5-b055-70661853d1cb
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-   "title": "Chapter 5 - The journey",
-   "content": "Here is the content of chapter 5",
+   "title": "The journey",
+   "content": "Here is the content of chapter 1",
    "isDraft": false
 }
 
@@ -132,7 +136,7 @@ Authorization: Bearer {{jwtToken}}
 
 ### Get Chapter by Id
 # @name getChapterById
-GET {{baseUrl}}/chapter/820192a6-ae48-4c78-a3b1-1132c5c451fe
+GET {{baseUrl}}/chapter/4d304ef8-b61e-4a0c-9e05-c626972ee951
 Authorization: Bearer {{jwtToken}}
 
 ### Reorder chapter
@@ -166,36 +170,35 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "Segundo anúncio",
+  "title": "quatorze anúncio",
   "image": "https://example.com/image.jpg",
   "content": "Conteúdo do anúncio."
 }
 
-# # Announcement - Buscar por id (Pública)
-# # @name getAnnouncementById
-# GET {{baseUrl}}/announcement/{{announcementId}}
+### Announcement - Buscar por id (Pública)
+# @name getAnnouncementById
+GET {{baseUrl}}/announcement/03a396c5-6a4b-491a-9fa6-0556bcc2a5e9
 
-# # Announcement - Buscar todos ativos (Pública)
-# # @name getActiveAnnouncements
-# GET {{baseUrl}}/announcement
+### Announcement - Buscar todos ativos (Pública)
+# @name getActiveAnnouncements
+GET {{baseUrl}}/announcement
 
-# # Announcement - Buscar todos (Publisher)
-# # @name getAllAnnouncements
-# GET {{baseUrl}}/announcement/all
-# Authorization: Bearer {{jwtToken}}
+### Announcement - Buscar todos (Publisher) 
+# @name getAllAnnouncements
+GET {{baseUrl}}/announcement/all?page=2&limit=5
+Authorization: Bearer {{jwtToken}}
 
-# # Announcement - Atualizar (Publisher)
-# # @name updateAnnouncement
-# PATCH {{baseUrl}}/announcement/{{announcementId}}
-# Authorization: Bearer {{jwtToken}}
-# Content-Type: application/json
+### Announcement - Atualizar (Publisher)
+# @name updateAnnouncement
+PATCH {{baseUrl}}/announcement/c8765f66-fb9f-4465-8477-b78e9f5e3168
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
 
-# {
-#   "title": "Título atualizado do anúncio",
-#   "isActive": true
-# }
+{
+  "isActive": true
+}
 
-# # Announcement - Deletar (Publisher)
-# # @name deleteAnnouncement
-# DELETE {{baseUrl}}/announcement/{{announcementId}}
-# Authorization: Bearer {{jwtToken}}
+### Announcement - Deletar (Publisher)
+# @name deleteAnnouncement
+DELETE {{baseUrl}}/announcement/74d7a246-c9f7-48b8-9ada-a1710b1b8483
+Authorization: Bearer {{jwtToken}}

@@ -15,6 +15,7 @@ import { User } from 'src/user/entities/user.entity';
 import { createSlug } from 'src/common/utils/create-slug';
 import { FractionalIndexingHelper } from 'src/common/utils/fractional-indexing-helper';
 import { countWords } from 'src/common/utils/words-count';
+import { Story } from 'src/story/entities/story.entity';
 
 @Injectable()
 export class ChapterService {
@@ -22,6 +23,8 @@ export class ChapterService {
     @InjectRepository(Chapter) private chapterRepository: Repository<Chapter>,
     @InjectRepository(Volume) private volumeRepository: Repository<Volume>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(Story)
+    private readonly storyRepository: Repository<Story>,
   ) {}
 
   async createChapter(
@@ -60,7 +63,6 @@ export class ChapterService {
 
       nextPosition = `a${existingChapters.length.toString(36)}`;
     } else {
-      // Incrementa a partir da última posição
       nextPosition = FractionalIndexingHelper.generateAfter(
         lastChapter.position,
       );
@@ -77,6 +79,16 @@ export class ChapterService {
       position: nextPosition,
       wordsCount,
       volume,
+    });
+
+    await this.volumeRepository.save({
+      ...volume,
+      chaptersCount: volume.chaptersCount + 1,
+    });
+
+    await this.storyRepository.save({
+      ...volume.story,
+      chaptersCount: volume.story.chaptersCount + 1,
     });
 
     return this.chapterRepository.save(chapter);
@@ -182,9 +194,13 @@ export class ChapterService {
       where: { id: chapterId },
       relations: ['volume'],
     });
+
     if (!chapter) {
       throw new NotFoundException('Chapter not found');
     }
+
+    await this.incrementViewCount(chapter);
+
     return chapter;
   }
 
@@ -236,6 +252,22 @@ export class ChapterService {
     if (chapter.volume.story.author.id !== authorId) {
       throw new ForbiddenException('You are not the author of this story');
     }
+
+    await this.volumeRepository.save({
+      ...chapter.volume,
+      chaptersCount: chapter.volume.chaptersCount - 1,
+    });
+
+    await this.storyRepository.save({
+      ...chapter.volume.story,
+      chaptersCount: chapter.volume.story.chaptersCount - 1,
+    });
+
     return this.chapterRepository.remove(chapter);
+  }
+
+  async incrementViewCount(chapter: Chapter) {
+    chapter.viewsCount += 1;
+    await this.chapterRepository.save(chapter);
   }
 }

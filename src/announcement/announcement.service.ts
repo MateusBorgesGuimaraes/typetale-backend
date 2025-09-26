@@ -11,6 +11,7 @@ import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 import { User, UserRole } from 'src/user/entities/user.entity';
 import { ResponseAnnouncementDto } from './dto/response-announcement.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class AnnouncementService {
@@ -60,11 +61,21 @@ export class AnnouncementService {
     return announcements.map((a) => new ResponseAnnouncementDto(a));
   }
 
-  async findAll() {
-    const announcements = await this.announcementRepository.find({
-      order: { createdAt: 'DESC' },
-    });
-    return announcements.map((a) => new ResponseAnnouncementDto(a));
+  async findAll(pagination: PaginationDto) {
+    const page = pagination.page || 1;
+    const limit = pagination.limit || 10;
+    const [announcements, total] =
+      await this.announcementRepository.findAndCount({
+        order: { createdAt: 'DESC' },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
+    return {
+      data: announcements.map((a) => new ResponseAnnouncementDto(a)),
+      total,
+      page,
+      limit,
+    };
   }
 
   async update(id: string, updateDto: UpdateAnnouncementDto, userId: string) {
@@ -108,7 +119,6 @@ export class AnnouncementService {
       throw new ForbiddenException(
         'Only the publisher author can delete this announcement',
       );
-    await this.announcementRepository.delete(id);
-    return { message: 'Announcement deleted successfully' };
+    return await this.announcementRepository.delete(id);
   }
 }
