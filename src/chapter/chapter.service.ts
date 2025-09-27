@@ -183,7 +183,6 @@ export class ChapterService {
         id: volume.id,
         title: volume.title,
         description: volume.description,
-        position: volume.position,
       },
       chapters: chapters,
     };

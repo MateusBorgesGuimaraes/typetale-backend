@@ -24,11 +24,4 @@ export class CreateVolumeDto {
   })
   @Transform(({ value }) => value?.trim())
   description?: string;
-
-  @IsNumber(
-    { allowInfinity: false, allowNaN: false },
-    { message: 'Position must be a valid number' },
-  )
-  @Min(0, { message: 'Position must be greater than or equal to 0' })
-  position: number;
 }

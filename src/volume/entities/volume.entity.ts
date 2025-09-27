@@ -28,9 +28,6 @@ export class Volume {
   @Column()
   description?: string;
 
-  @Column({ type: 'float' })
-  position: number;
-
   @OneToMany(() => Chapter, (chapter) => chapter.volume)
   chapters: Chapter[];
 

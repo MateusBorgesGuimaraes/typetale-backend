@@ -1,3 +1,4 @@
+import { ReadingProgressModule } from './reading-progress/reading-progress.module';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -9,6 +10,7 @@ import { StoryModule } from './story/story.module';
 import { VolumeModule } from './volume/volume.module';
 import { ChapterModule } from './chapter/chapter.module';
 import { AnnouncementModule } from './announcement/announcement.module';
+import { HighlightModule } from './highlight/highlight.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { AnnouncementModule } from './announcement/announcement.module';
     VolumeModule,
     ChapterModule,
     AnnouncementModule,
+    HighlightModule,
+    ReadingProgressModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -7,7 +7,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "redator@email.com",
+  "email": "user@email.com",
   "password": "123456"
 }
 
@@ -17,8 +17,8 @@ POST {{baseUrl}}/user
 Content-Type: application/json
 
 {
-  "username": "redator",
-  "email": "redator@email.com",
+  "username": "reader",
+  "email": "reader@email.com",
   "password": "123456",
   "avatarUrl": "urldaimagem"
 }
@@ -63,7 +63,7 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "Hobbits resolve 2",
+  "title": "Hobbits resolve 1",
   "synopsis": "here are the synopsis od the story"
 }
 
@@ -78,14 +78,13 @@ Authorization: Bearer {{jwtToken}}
 
 ### Create Volume
 # @name createVolume
-POST {{baseUrl}}/volume/create/32904092-0650-494e-bdff-68473b0227ae
+POST {{baseUrl}}/volume/create/29f4b3f8-ba63-4273-a3e6-940fa7a02d69
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "So far away",
-  "description": "Here is the description of volume 1",
-  "position": 1
+  "title": "So far away 1",
+  "description": "Here is the description of volume 1"
 }
 
 ### Update Volume
@@ -119,19 +118,19 @@ Authorization: Bearer {{jwtToken}}
 
 ### Create Chapter
 # @name createChapter
-POST {{baseUrl}}/chapter/create/f2e941ec-9f49-46c5-b055-70661853d1cb
+POST {{baseUrl}}/chapter/create/493bdc56-e79b-4145-a833-6b5b99717cef
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-   "title": "The journey",
-   "content": "Here is the content of chapter 1",
-   "isDraft": false
+   "title": "The journey 6",
+   "content": "Here is the content of chapter 6",
+   "isDraft": true
 }
 
 ### Get Chapters by Volume OBS
 # @name getChaptersByVolume
-GET {{baseUrl}}/chapter/volume/db69f898-5396-4cd1-962e-1d2be8626254
+GET {{baseUrl}}/chapter/volume/493bdc56-e79b-4145-a833-6b5b99717cef
 Authorization: Bearer {{jwtToken}}
 
 ### Get Chapter by Id
@@ -202,3 +201,57 @@ Content-Type: application/json
 # @name deleteAnnouncement
 DELETE {{baseUrl}}/announcement/74d7a246-c9f7-48b8-9ada-a1710b1b8483
 Authorization: Bearer {{jwtToken}}
+
+
+### Create Highlight
+# @name createHighlight
+POST {{baseUrl}}/highlight
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "title": "Highlight Title 7",
+  "banner": "https://example.com/banner.jpg",
+  "link": "https://example.com"
+}
+
+### Get all Highlights (Public)
+# @name getAllHighlights
+GET {{baseUrl}}/highlight
+Authorization: Bearer {{jwtToken}}
+
+### Get Highlight by Id (Public)
+# @name getHighlightById
+GET {{baseUrl}}/highlight/d32976a2-db29-4c53-8115-0420aeeb0a9a
+Authorization: Bearer {{jwtToken}}
+
+### Get all Highlights (Publisher)
+# @name getAllHighlightsPublisher
+GET {{baseUrl}}/highlight/all
+Authorization: Bearer {{jwtToken}}
+
+### Update Highlight (Publisher)
+# @name updateHighlight
+PATCH {{baseUrl}}/highlight/d32976a2-db29-4c53-8115-0420aeeb0a9a
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "isActive": true
+}
+
+### Delete Highlight
+# @name deleteHighlight
+DELETE {{baseUrl}}/highlight/aa6ecd26-195d-41ee-9719-ed4e2dcecbca
+Authorization: Bearer {{jwtToken}}
+
+### Progresso de leitura
+# @name readingProgress
+PATCH {{baseUrl}}/reading-progress
+Content-Type: application/json
+Authorization: Bearer {{jwtToken}}
+
+{
+  "storyId": "29f4b3f8-ba63-4273-a3e6-940fa7a02d69",
+  "chapterId": "c0be1f30-08e9-4f35-951f-577ba4237b4f"
+}

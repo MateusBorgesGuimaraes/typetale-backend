@@ -16,7 +16,6 @@ export class ResponseChapterDto {
   readonly volume: {
     id: string;
     title: string;
-    position: number;
   };
 
   constructor(chapter: Chapter) {
@@ -34,7 +33,6 @@ export class ResponseChapterDto {
     this.volume = {
       id: chapter.volume.id,
       title: chapter.volume.title,
-      position: chapter.volume.position,
     };
   }
 }

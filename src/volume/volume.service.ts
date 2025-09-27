@@ -47,7 +47,6 @@ export class VolumeService {
     const volume = this.volumeRepository.create({
       title: createVolumeDto.title,
       description: createVolumeDto.description,
-      position: createVolumeDto.position,
       story: story,
     });
 
@@ -57,6 +56,7 @@ export class VolumeService {
   async findAllVolumes(storyId: string) {
     const volumes = await this.volumeRepository.find({
       where: { story: { id: storyId } },
+      order: { createdAt: 'ASC' },
     });
     return volumes;
   }
@@ -65,6 +65,7 @@ export class VolumeService {
     const volumes = await this.volumeRepository.find({
       where: { story: { id: storyId } },
       relations: ['chapters'],
+      order: { createdAt: 'ASC' },
     });
     return volumes;
   }
