@@ -10,6 +10,7 @@ export class ResponseChapterDto {
   readonly position: string;
   readonly publishedAt?: Date;
   readonly wordsCount: number;
+  readonly visualPosition: number;
   readonly viewsCount: number;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -18,7 +19,7 @@ export class ResponseChapterDto {
     title: string;
   };
 
-  constructor(chapter: Chapter) {
+  constructor(chapter: Chapter & { visualPosition: number }) {
     this.id = chapter.id;
     this.title = chapter.title;
     this.slug = chapter.slug;
@@ -27,6 +28,7 @@ export class ResponseChapterDto {
     this.position = chapter.position;
     this.publishedAt = chapter.publishedAt || undefined;
     this.wordsCount = chapter.wordsCount;
+    this.visualPosition = chapter.visualPosition;
     this.viewsCount = chapter.viewsCount;
     this.createdAt = chapter.createdAt;
     this.updatedAt = chapter.updatedAt;

@@ -1,4 +1,5 @@
 import { ReadingProgressModule } from './reading-progress/reading-progress.module';
+import { LibraryModule } from './library/library.module';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -31,6 +32,7 @@ import { HighlightModule } from './highlight/highlight.module';
     AnnouncementModule,
     HighlightModule,
     ReadingProgressModule,
+    LibraryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

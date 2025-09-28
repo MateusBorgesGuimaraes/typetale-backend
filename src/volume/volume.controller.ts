@@ -47,13 +47,6 @@ export class VolumeController {
     return volumes.map((volume) => new ResponseVolumeDto(volume));
   }
 
-  @Get('/all-with-chapters/:storyId')
-  async findAllVolumesWithChapters(@Param('storyId') storyId: string) {
-    const volumes =
-      await this.volumeService.findAllVolumesWithChapters(storyId);
-    return volumes.map((volume) => new ResponseVolumeDto(volume));
-  }
-
   @UseGuards(JwtAuthGuard)
   @Patch('/:volumeId')
   async updateVolume(

@@ -48,6 +48,21 @@ export class ChapterController {
     };
   }
 
+  @Get('story/:storyId/all')
+  async findAllChaptersInStory(@Param('storyId') storyId: string) {
+    const result = await this.chapterService.findAllChaptersInStory(storyId);
+
+    return {
+      story: result.story,
+      volumes: result.volumes.map((volumeData) => ({
+        volume: volumeData.volume,
+        chapters: volumeData.chapters.map(
+          (chapter) => new SimpleResponseChapterDto(chapter),
+        ),
+      })),
+    };
+  }
+
   @UseGuards(JwtAuthGuard)
   @Patch(':id/reorder')
   async reorderChapter(
@@ -56,7 +71,14 @@ export class ChapterController {
     @Req() req: AuthenticatedRequest,
   ) {
     const userId = req.user.id;
-    return this.chapterService.reorderChapter(id, userId, reorderDto);
+    const chapter = await this.chapterService.reorderChapter(
+      id,
+      userId,
+      reorderDto,
+    );
+
+    const updatedChapter = await this.chapterService.findOneChapter(chapter.id);
+    return new ResponseChapterDto(updatedChapter);
   }
 
   @Get(':id')
@@ -77,7 +99,9 @@ export class ChapterController {
       req.user.id,
       updateChapterDto,
     );
-    return new ResponseChapterDto(chapter);
+
+    const updatedChapter = await this.chapterService.findOneChapter(chapter.id);
+    return new ResponseChapterDto(updatedChapter);
   }
 
   @UseGuards(JwtAuthGuard)

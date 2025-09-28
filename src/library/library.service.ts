@@ -1,0 +1,96 @@
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { LibraryEntry } from './entities/library-entry.entity';
+import { User } from '../user/entities/user.entity';
+import { Story } from '../story/entities/story.entity';
+import { AddToLibraryDto } from './dto/add-to-library.dto';
+import { RemoveFromLibraryDto } from './dto/remove-from-library.dto';
+import { ResponseLibraryEntryDto } from './dto/response-library-entry.dto';
+import { ReadingProgress } from '../reading-progress/entities/reading-progress.entity';
+
+@Injectable()
+export class LibraryService {
+  constructor(
+    @InjectRepository(LibraryEntry)
+    private libraryRepository: Repository<LibraryEntry>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    @InjectRepository(Story)
+    private storyRepository: Repository<Story>,
+    @InjectRepository(ReadingProgress)
+    private progressRepository: Repository<ReadingProgress>,
+  ) {}
+
+  async addToLibrary(
+    userId: string,
+    dto: AddToLibraryDto,
+  ): Promise<ResponseLibraryEntryDto> {
+    const user = await this.userRepository.findOneBy({ id: userId });
+    const story = await this.storyRepository.findOneBy({ id: dto.storyId });
+    if (!user || !story) throw new NotFoundException('User or story not found');
+    const exists = await this.libraryRepository.findOne({
+      where: { user: { id: userId }, story: { id: dto.storyId } },
+    });
+    if (exists) throw new BadRequestException('Story already in library');
+    const progress = await this.progressRepository.findOne({
+      where: { user: { id: userId }, story: { id: dto.storyId } },
+    });
+    const entry = this.libraryRepository.create({ user, story });
+    if (progress) entry.readingProgress = progress;
+    await this.libraryRepository.save(entry);
+    // Recarregar com relations
+    const savedEntry = await this.libraryRepository.findOne({
+      where: { id: entry.id },
+      relations: ['story', 'readingProgress'],
+    });
+    return this.toResponseDto(savedEntry!);
+  }
+
+  async removeFromLibrary(userId: string, storyId: string): Promise<void> {
+    const entry = await this.libraryRepository.findOne({
+      where: { user: { id: userId }, story: { id: storyId } },
+    });
+    if (!entry) throw new NotFoundException('Entry not found');
+    await this.libraryRepository.remove(entry);
+  }
+
+  async removeManyFromLibrary(
+    userId: string,
+    dto: RemoveFromLibraryDto,
+  ): Promise<void> {
+    await Promise.all(
+      dto.storyIds.map((id) => this.removeFromLibrary(userId, id)),
+    );
+  }
+
+  async getLibrary(userId: string): Promise<ResponseLibraryEntryDto[]> {
+    const entries = await this.libraryRepository.find({
+      where: { user: { id: userId } },
+      relations: ['story', 'readingProgress'],
+    });
+    return entries.map((e) => this.toResponseDto(e));
+  }
+
+  private toResponseDto(entry: LibraryEntry): ResponseLibraryEntryDto {
+    return {
+      id: entry.id,
+      storyId: entry.story.id,
+      storyTitle: entry.story.title,
+      coverUrl: entry.story.coverUrl,
+      readingProgress: entry.readingProgress
+        ? {
+            id: entry.readingProgress.id,
+            userId: entry.readingProgress.user.id,
+            storyId: entry.readingProgress.story.id,
+            chapterId: entry.readingProgress.chapter.id,
+            updatedAt: entry.readingProgress.updatedAt,
+          }
+        : undefined,
+    };
+  }
+}

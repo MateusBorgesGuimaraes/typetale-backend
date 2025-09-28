@@ -61,15 +61,6 @@ export class VolumeService {
     return volumes;
   }
 
-  async findAllVolumesWithChapters(storyId: string) {
-    const volumes = await this.volumeRepository.find({
-      where: { story: { id: storyId } },
-      relations: ['chapters'],
-      order: { createdAt: 'ASC' },
-    });
-    return volumes;
-  }
-
   async findOneVolume(volumeId: string) {
     const volume = await this.volumeRepository.findOneBy({ id: volumeId });
     if (!volume) {
