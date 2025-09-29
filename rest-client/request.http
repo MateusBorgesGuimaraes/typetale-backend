@@ -17,8 +17,8 @@ POST {{baseUrl}}/user
 Content-Type: application/json
 
 {
-  "username": "reader",
-  "email": "reader@email.com",
+  "username": "writer",
+  "email": "writer@email.com",
   "password": "123456",
   "avatarUrl": "urldaimagem"
 }
@@ -35,11 +35,11 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "Hobbits resolve",
-  "coverUrl": "https://example.com/covers/hobbbit-resolve.jpg",
-  "storyType": "fanfic",
+  "title": "The fire sword",
+  "coverUrl": "https://example.com/covers/fire-sword.jpg",
+  "storyType": "original",
   "synopsis": "here are the synopsis od the story",
-  "tags": ["romanece", "aventura"],
+  "tags": ["acao", "aventura", "drama"],
   "mainGenre": "fantasy",
   "language": "english"
 }
@@ -135,7 +135,7 @@ Authorization: Bearer {{jwtToken}}
 
 ### Get Chapter by Id
 # @name getChapterById
-GET {{baseUrl}}/chapter/e15cc043-c7a2-43eb-b7a7-a523cdbaecaa
+GET {{baseUrl}}/chapter/123acb61-cabd-4465-943e-3f75647f8b1e
 Authorization: Bearer {{jwtToken}}
 
 ### Reorder chapter
@@ -243,6 +243,12 @@ Content-Type: application/json
 ### Delete Highlight
 # @name deleteHighlight
 DELETE {{baseUrl}}/highlight/aa6ecd26-195d-41ee-9719-ed4e2dcecbca
+Authorization: Bearer {{jwtToken}}
+
+### Ver todos os progressos de leitura
+# @name readingProgress
+GET {{baseUrl}}/reading-progress
+Content-Type: application/json
 Authorization: Bearer {{jwtToken}}
 
 ### Progresso de leitura

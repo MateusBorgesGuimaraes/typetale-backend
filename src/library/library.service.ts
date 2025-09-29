@@ -12,6 +12,7 @@ import { AddToLibraryDto } from './dto/add-to-library.dto';
 import { RemoveFromLibraryDto } from './dto/remove-from-library.dto';
 import { ResponseLibraryEntryDto } from './dto/response-library-entry.dto';
 import { ReadingProgress } from '../reading-progress/entities/reading-progress.entity';
+import { ChapterService } from 'src/chapter/chapter.service';
 
 @Injectable()
 export class LibraryService {
@@ -24,12 +25,13 @@ export class LibraryService {
     private storyRepository: Repository<Story>,
     @InjectRepository(ReadingProgress)
     private progressRepository: Repository<ReadingProgress>,
+    private readonly chapterService: ChapterService,
   ) {}
 
   async addToLibrary(
     userId: string,
     dto: AddToLibraryDto,
-  ): Promise<ResponseLibraryEntryDto> {
+  ): Promise<ResponseLibraryEntryDto | null> {
     const user = await this.userRepository.findOneBy({ id: userId });
     const story = await this.storyRepository.findOneBy({ id: dto.storyId });
     if (!user || !story) throw new NotFoundException('User or story not found');
@@ -48,7 +50,7 @@ export class LibraryService {
       where: { id: entry.id },
       relations: ['story', 'readingProgress'],
     });
-    return this.toResponseDto(savedEntry!);
+    return savedEntry ? new ResponseLibraryEntryDto(savedEntry) : null;
   }
 
   async removeFromLibrary(userId: string, storyId: string): Promise<void> {
@@ -68,29 +70,57 @@ export class LibraryService {
     );
   }
 
-  async getLibrary(userId: string): Promise<ResponseLibraryEntryDto[]> {
+  async getLibrary(userId: string) {
     const entries = await this.libraryRepository.find({
       where: { user: { id: userId } },
-      relations: ['story', 'readingProgress'],
+      relations: ['story', 'readingProgress', 'readingProgress.chapter'],
     });
-    return entries.map((e) => this.toResponseDto(e));
+
+    const entriesWithChapterPosition = await Promise.all(
+      entries.map(async (entry) => {
+        let chapterPosition:
+          | {
+              visualPosition: number;
+              totalChapters: number;
+            }
+          | undefined = undefined;
+
+        // Se existe progresso de leitura, busca a posição do capítulo
+        if (entry.readingProgress && entry.readingProgress.chapter?.id) {
+          try {
+            chapterPosition = await this.chapterService.getChapterPosition(
+              entry.readingProgress.chapter.id,
+            );
+          } catch (error) {
+            console.warn(
+              `Could not get chapter position for chapter ${entry.readingProgress.chapter.id}:`,
+              error.message,
+            );
+          }
+        }
+
+        return new ResponseLibraryEntryDto(entry, chapterPosition);
+      }),
+    );
+
+    return entriesWithChapterPosition;
   }
 
-  private toResponseDto(entry: LibraryEntry): ResponseLibraryEntryDto {
-    return {
-      id: entry.id,
-      storyId: entry.story.id,
-      storyTitle: entry.story.title,
-      coverUrl: entry.story.coverUrl,
-      readingProgress: entry.readingProgress
-        ? {
-            id: entry.readingProgress.id,
-            userId: entry.readingProgress.user.id,
-            storyId: entry.readingProgress.story.id,
-            chapterId: entry.readingProgress.chapter.id,
-            updatedAt: entry.readingProgress.updatedAt,
-          }
-        : undefined,
-    };
-  }
+  // private toResponseDto(entry: LibraryEntry): ResponseLibraryEntryDto {
+  //   return {
+  //     id: entry.id,
+  //     storyId: entry.story.id,
+  //     storyTitle: entry.story.title,
+  //     coverUrl: entry.story.coverUrl,
+  //     readingProgress: entry.readingProgress
+  //       ? {
+  //           id: entry.readingProgress.id,
+  //           userId: entry.readingProgress.user.id,
+  //           storyId: entry.readingProgress.story.id,
+  //           chapterId: entry.readingProgress.chapter.id,
+  //           updatedAt: entry.readingProgress.updatedAt,
+  //         }
+  //       : undefined,
+  //   };
+  // }
 }

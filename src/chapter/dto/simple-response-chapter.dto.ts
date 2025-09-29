@@ -1,5 +1,4 @@
 import { Chapter } from '../entities/chapter.entity';
-import { Volume } from 'src/volume/entities/volume.entity';
 
 export class SimpleResponseChapterDto {
   readonly id: string;

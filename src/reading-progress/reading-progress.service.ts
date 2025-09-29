@@ -12,6 +12,7 @@ import { User } from 'src/user/entities/user.entity';
 import { Story } from 'src/story/entities/story.entity';
 import { Chapter } from 'src/chapter/entities/chapter.entity';
 import { FractionalIndexingHelper } from 'src/common/utils/fractional-indexing-helper';
+import { ChapterService } from 'src/chapter/chapter.service';
 
 @Injectable()
 export class ReadingProgressService {
@@ -24,6 +25,7 @@ export class ReadingProgressService {
     private readonly storyRepository: Repository<Story>,
     @InjectRepository(Chapter)
     private readonly chapterRepository: Repository<Chapter>,
+    private readonly chapterService: ChapterService,
   ) {}
 
   async updateProgress(dto: UpdateReadingProgressDto, userId: string) {
@@ -108,8 +110,26 @@ export class ReadingProgressService {
       order: { updatedAt: 'DESC' },
     });
 
-    return progresses.map(
-      (progress) => new ResponseReadingProgressDto(progress),
+    // Agora você pode usar o ChapterService
+    const progressesWithPosition = await Promise.all(
+      progresses.map(async (progress) => {
+        try {
+          const chapterPosition = await this.chapterService.getChapterPosition(
+            progress.chapter.id,
+          );
+
+          return {
+            ...new ResponseReadingProgressDto(progress),
+            chapterPosition: chapterPosition.visualPosition,
+            totalChapters: chapterPosition.totalChapters,
+          };
+        } catch (error) {
+          // Se não conseguir obter a posição, retorna sem ela
+          return new ResponseReadingProgressDto(progress);
+        }
+      }),
     );
+
+    return progressesWithPosition;
   }
 }

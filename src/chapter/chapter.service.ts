@@ -349,6 +349,35 @@ export class ChapterService {
     }));
   }
 
+  async getChapterPosition(chapterId: string): Promise<{
+    visualPosition: number;
+    totalChapters: number;
+  }> {
+    const chapter = await this.chapterRepository.findOne({
+      where: { id: chapterId },
+      relations: ['volume', 'volume.story'],
+    });
+
+    if (!chapter) {
+      throw new NotFoundException('Chapter not found');
+    }
+
+    const storyId = chapter.volume.story.id;
+    const totalChapters = await this.chapterRepository.count({
+      where: { volume: { story: { id: storyId } } },
+    });
+
+    const chaptersWithPosition = await this.addGlobalVisualPositions(
+      [chapter],
+      storyId,
+    );
+
+    return {
+      visualPosition: chaptersWithPosition[0]?.visualPosition || 1,
+      totalChapters,
+    };
+  }
+
   private async addGlobalVisualPositionsWithStoryId<
     T extends { id: string; position: string },
   >(

@@ -11,5 +11,6 @@ import { Story } from 'src/story/entities/story.entity';
   imports: [TypeOrmModule.forFeature([Chapter, Volume, User, Story])],
   controllers: [ChapterController],
   providers: [ChapterService],
+  exports: [ChapterService],
 })
 export class ChapterModule {}
