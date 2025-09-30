@@ -1,3 +1,4 @@
+import { Story } from './../story/entities/story.entity';
 import { ReorderChapterDto } from './dto/reorder-chapter.dto';
 import {
   BadRequestException,
@@ -15,12 +16,13 @@ import { User } from 'src/user/entities/user.entity';
 import { createSlug } from 'src/common/utils/create-slug';
 import { FractionalIndexingHelper } from 'src/common/utils/fractional-indexing-helper';
 import { countWords } from 'src/common/utils/words-count';
-import { Story } from 'src/story/entities/story.entity';
+import { StoryService } from 'src/story/story.service';
 
 @Injectable()
 export class ChapterService {
   constructor(
     @InjectRepository(Chapter) private chapterRepository: Repository<Chapter>,
+    private readonly storyService: StoryService,
     @InjectRepository(Volume) private volumeRepository: Repository<Volume>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Story)
@@ -88,10 +90,13 @@ export class ChapterService {
       chaptersCount: volume.chaptersCount + 1,
     });
 
-    await this.storyRepository.save({
-      ...volume.story,
-      chaptersCount: volume.story.chaptersCount + 1,
-    });
+    await this.storyService.incrementChaptersCount(volume.story);
+
+    if (chapter.isDraft) {
+      await this.storyService.incrementPublishedChaptersCount(volume.story);
+    }
+
+    await this.storyService.changeWordsCount(volume.story, wordsCount);
 
     const savedChapter = await this.chapterRepository.save(chapter);
 
@@ -259,6 +264,30 @@ export class ChapterService {
     if (chapter.isDraft && updateChapterDto.isDraft === false) {
       chapter.publishedAt = new Date();
     }
+
+    if (!chapter.isDraft && updateChapterDto.isDraft === true) {
+      await this.storyService.incrementPublishedChaptersCount(
+        chapter.volume.story,
+      );
+    }
+
+    if (updateChapterDto.isDraft === false) {
+      await this.storyService.incrementPublishedChaptersCount(
+        chapter.volume.story,
+      );
+    }
+
+    if (chapter.wordsCount !== countWords(chapter.content)) {
+      const storyWordsCount =
+        chapter.volume.story.wordsCount -
+        chapter.wordsCount +
+        countWords(chapter.content);
+      await this.storyService.changeWordsCount(
+        chapter.volume.story,
+        storyWordsCount,
+      );
+    }
+
     return this.chapterRepository.save(chapter);
   }
 

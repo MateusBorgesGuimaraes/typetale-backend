@@ -7,11 +7,13 @@ import { User } from '../user/entities/user.entity';
 import { Story } from '../story/entities/story.entity';
 import { ReadingProgress } from '../reading-progress/entities/reading-progress.entity';
 import { ChapterModule } from 'src/chapter/chapter.module';
+import { StoryModule } from 'src/story/story.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([LibraryEntry, User, Story, ReadingProgress]),
     ChapterModule,
+    StoryModule,
   ],
   providers: [LibraryService],
   controllers: [LibraryController],

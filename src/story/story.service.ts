@@ -48,6 +48,8 @@ export class StoryService {
       throw new NotFoundException('Story not found');
     }
 
+    await this.incrementViewsCount(story);
+
     return story;
   }
 
@@ -57,6 +59,8 @@ export class StoryService {
     if (!story) {
       throw new NotFoundException('Story not found');
     }
+
+    await this.incrementViewsCount(story);
 
     return story;
   }
@@ -95,6 +99,10 @@ export class StoryService {
       .skip(offset)
       .take(filterDto.limit)
       .getManyAndCount();
+
+    if (!data) {
+      throw new NotFoundException('Stories not found');
+    }
 
     return {
       data,
@@ -290,5 +298,53 @@ export class StoryService {
     }
 
     queryBuilder.addOrderBy('story.id', 'ASC');
+  }
+
+  async incrementChaptersCount(story: Story): Promise<void> {
+    story.chaptersCount += 1;
+    await this.storyRepository.save(story);
+  }
+
+  async decrementChaptersCount(story: Story): Promise<void> {
+    story.chaptersCount -= 1;
+    await this.storyRepository.save(story);
+  }
+
+  async incrementPublishedChaptersCount(story: Story): Promise<void> {
+    story.publishedChaptersCount += 1;
+    await this.storyRepository.save(story);
+  }
+
+  async changeWordsCount(story: Story, wordsCount: number): Promise<void> {
+    story.wordsCount = wordsCount;
+    await this.storyRepository.save(story);
+  }
+
+  async decrementPublishedChaptersCount(story: Story): Promise<void> {
+    story.publishedChaptersCount -= 1;
+    await this.storyRepository.save(story);
+  }
+
+  async incrementFollowersCount(story: Story): Promise<void> {
+    story.followersCount += 1;
+    await this.storyRepository.save(story);
+  }
+
+  async decrementFollowersCount(story: Story): Promise<void> {
+    story.followersCount -= 1;
+    await this.storyRepository.save(story);
+  }
+
+  async decrementFollowersCountById(id: string): Promise<void> {
+    const story = await this.storyRepository.findOneBy({ id });
+    if (story) {
+      story.followersCount -= 1;
+      await this.storyRepository.save(story);
+    }
+  }
+
+  async incrementViewsCount(story: Story): Promise<void> {
+    story.viewsCount += 1;
+    await this.storyRepository.save(story);
   }
 }
