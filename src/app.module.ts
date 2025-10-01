@@ -12,6 +12,8 @@ import { VolumeModule } from './volume/volume.module';
 import { ChapterModule } from './chapter/chapter.module';
 import { AnnouncementModule } from './announcement/announcement.module';
 import { HighlightModule } from './highlight/highlight.module';
+import { CommentModule } from './comment/comment.module';
+import { RatingModule } from './rating/rating.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { HighlightModule } from './highlight/highlight.module';
     HighlightModule,
     ReadingProgressModule,
     LibraryModule,
+    CommentModule,
+    RatingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

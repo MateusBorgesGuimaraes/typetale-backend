@@ -1,3 +1,4 @@
+import { Rating } from 'src/rating/entities/rating-entity';
 import { User } from 'src/user/entities/user.entity';
 import { Volume } from 'src/volume/entities/volume.entity';
 import {
@@ -111,4 +112,7 @@ export class Story {
 
   @OneToMany(() => Volume, (volume) => volume.story)
   volumes: Volume[];
+
+  @OneToMany(() => Rating, (rating) => rating.story)
+  ratings: Rating[];
 }

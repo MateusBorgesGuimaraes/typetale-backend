@@ -1,4 +1,6 @@
 import { Story } from 'src/story/entities/story.entity';
+import { Comment } from 'src/comment/entities/comment-entity';
+import { Rating } from 'src/rating/entities/rating-entity';
 import {
   Column,
   CreateDateColumn,
@@ -41,4 +43,10 @@ export class User {
 
   @OneToMany(() => Story, (story) => story.author)
   stories: Story[];
+
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments: Comment[];
+
+  @OneToMany(() => Rating, (rating) => rating.user)
+  ratings: Rating[];
 }
