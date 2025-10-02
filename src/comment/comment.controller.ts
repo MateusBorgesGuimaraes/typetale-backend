@@ -17,11 +17,11 @@ import { CreateRatingDto } from 'src/rating/dto/create-rating.dto';
 import { CommentTarget } from './entities/comment-entity';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 
-@UseGuards(JwtAuthGuard)
 @Controller('comment')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   async create(
     @Req() req: AuthenticatedRequest,

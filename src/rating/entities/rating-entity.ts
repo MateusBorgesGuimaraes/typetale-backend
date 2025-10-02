@@ -6,9 +6,11 @@ import {
   Column,
   ManyToOne,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity()
+@Index(['user', 'story'], { unique: true })
 export class Rating {
   @PrimaryGeneratedColumn('uuid')
   id: string;

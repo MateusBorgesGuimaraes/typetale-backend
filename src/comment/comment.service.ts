@@ -18,6 +18,8 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { CreateRatingDto } from 'src/rating/dto/create-rating.dto';
 import { Rating } from 'src/rating/entities/rating-entity';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { RatingService } from 'src/rating/rating.service';
+import { ResponseCommentWithRatingDto } from './dto/response-comment-with-rating.dto';
 
 @Injectable()
 export class CommentService {
@@ -33,6 +35,7 @@ export class CommentService {
     private readonly announcementRepository: Repository<Announcement>,
     @InjectRepository(Rating)
     private readonly ratingRepository: Repository<Rating>,
+    private readonly ratingService: RatingService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -58,20 +61,25 @@ export class CommentService {
           throw new NotFoundException(`Story with id ${targetId} not found`);
 
         return this.dataSource.transaction(async (manager) => {
-          const ratingEntity = manager.create(Rating, {
-            ...rating,
-            user,
-            story,
-          });
-          await manager.save(ratingEntity);
+          const ratingEntity = await this.ratingService.rateStory(
+            targetId,
+            user.id,
+            rating,
+            manager,
+          );
 
           const comment = manager.create(Comment, {
-            ...createCommentDto,
+            body: createCommentDto.body,
+            targetType: createCommentDto.targetType,
+            targetId: createCommentDto.targetId,
             user,
+            rating: ratingEntity,
           });
-          await manager.save(comment);
+          const savedComment = await manager.save(comment);
 
-          return { comment, rating: ratingEntity };
+          (savedComment as any).rating = ratingEntity;
+
+          return new ResponseCommentDto(savedComment, CommentTarget.STORY);
         });
       }
 
@@ -79,14 +87,18 @@ export class CommentService {
         const chapter = await this.chapterRepository.findOneBy({
           id: targetId,
         });
+
         if (!chapter)
           throw new NotFoundException(`Chapter with id ${targetId} not found`);
 
         const comment = this.commentRepository.create({
-          ...createCommentDto,
+          body: createCommentDto.body,
+          targetType: createCommentDto.targetType,
+          targetId: createCommentDto.targetId,
           user,
         });
-        return this.commentRepository.save(comment);
+        const savedComment = await this.commentRepository.save(comment);
+        return new ResponseCommentDto(savedComment);
       }
 
       case CommentTarget.ANNOUCEMENT: {
@@ -99,10 +111,13 @@ export class CommentService {
           );
 
         const comment = this.commentRepository.create({
-          ...createCommentDto,
+          body: createCommentDto.body,
+          targetType: createCommentDto.targetType,
+          targetId: createCommentDto.targetId,
           user,
         });
-        return this.commentRepository.save(comment);
+        const savedComment = await this.commentRepository.save(comment);
+        return new ResponseCommentDto(savedComment);
       }
 
       default:
@@ -135,6 +150,10 @@ export class CommentService {
       skip: (page - 1) * limit,
       take: limit,
     });
+
+    if (comments.length === 0) {
+      throw new NotFoundException(`No comments found for ${targetType}`);
+    }
 
     return {
       data: comments.map((c) => new ResponseCommentDto(c, targetType)),

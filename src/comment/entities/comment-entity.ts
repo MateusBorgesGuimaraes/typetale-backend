@@ -1,3 +1,4 @@
+import { Rating } from 'src/rating/entities/rating-entity';
 import { User } from 'src/user/entities/user.entity';
 import {
   Entity,
@@ -6,6 +7,8 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 
 export enum CommentTarget {
@@ -36,4 +39,8 @@ export class Comment {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToOne(() => Rating, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn()
+  rating?: Rating;
 }

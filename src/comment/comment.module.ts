@@ -8,6 +8,8 @@ import { User } from 'src/user/entities/user.entity';
 import { Announcement } from 'src/announcement/entities/announcement.entity';
 import { Chapter } from 'src/chapter/entities/chapter.entity';
 import { Rating } from 'src/rating/entities/rating-entity';
+import { RatingModule } from 'src/rating/rating.module';
+import { RatingService } from 'src/rating/rating.service';
 
 @Module({
   imports: [
@@ -19,8 +21,10 @@ import { Rating } from 'src/rating/entities/rating-entity';
       Chapter,
       Rating,
     ]),
+    RatingModule,
   ],
   controllers: [CommentController],
   providers: [CommentService],
+  exports: [CommentService],
 })
 export class CommentModule {}

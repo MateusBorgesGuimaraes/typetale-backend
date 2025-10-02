@@ -7,7 +7,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "user@email.com",
+  "email": "publisher@email.com",
   "password": "123456"
 }
 
@@ -17,8 +17,8 @@ POST {{baseUrl}}/user
 Content-Type: application/json
 
 {
-  "username": "writer",
-  "email": "writer@email.com",
+  "username": "publisher",
+  "email": "publisher@email.com",
   "password": "123456",
   "avatarUrl": "urldaimagem"
 }
@@ -46,11 +46,11 @@ Content-Type: application/json
 
 ### Find One Story by slug
 # @name findStoryBySlug
-GET {{baseUrl}}/story/Hobbits-resolve-9gzhc0
+GET {{baseUrl}}/story/The-fire-sword-a1mxd6
 
 ### Find All Stories with pagination and filtering
 # @name findAllStoriesPaginatedAndFiltered
-GET {{baseUrl}}/story?page=1&limit=2&storyType=fanfic&&sortOrder=ASC
+GET {{baseUrl}}/story?page=1&limit=2&storyType=original&&sortOrder=ASC
 
 ### Find All Stories with pagination
 # @name findAllStoriesPaginated
@@ -78,13 +78,13 @@ Authorization: Bearer {{jwtToken}}
 
 ### Create Volume
 # @name createVolume
-POST {{baseUrl}}/volume/create/29f4b3f8-ba63-4273-a3e6-940fa7a02d69
+POST {{baseUrl}}/volume/create/ed14c3be-4831-432f-b461-03bfcc351cfc
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "Volum",
-  "description": "Here is the description of volume 2"
+  "title": "Volume 1 of fire sword",
+  "description": "Here is the description of volume 1 of fire sword"
 }
 
 ### Update Volume
@@ -98,12 +98,12 @@ Content-Type: application/json
 
 ### Get Volume by Id
 # @name getVolumeById
-GET {{baseUrl}}/volume/fde43722-2a18-44e4-b26d-900d10949f9c
+GET {{baseUrl}}/volume/9ec8bc40-aeda-4564-b2ff-f7cfb8a52538
 Authorization: Bearer {{jwtToken}}
 
 ### Get Volumes by Story
 # @name getVolumesByStory
-GET {{baseUrl}}/volume/all/29f4b3f8-ba63-4273-a3e6-940fa7a02d69
+GET {{baseUrl}}/volume/all/25d8d2f0-a3e6-4ae4-b385-0be9f67d51d5
 Authorization: Bearer {{jwtToken}}
 
 ### Delete Volume
@@ -113,24 +113,24 @@ Authorization: Bearer {{jwtToken}}
 
 ### Create Chapter
 # @name createChapter
-POST {{baseUrl}}/chapter/create/4c6df8cc-ff4d-4ea4-a92a-771870022df7
+POST {{baseUrl}}/chapter/create/52ad5743-54e4-4107-a387-2d5774a3eeb0
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-   "title": "volumm 2 chapters 3545213",
-   "content": "Here is the content of chapter 315",
+   "title": "chaper 4 fire sword",
+   "content": "Here is the content of fire sword",
    "isDraft": true
 }
 
 ### Get Chapters by Volume
 # @name getChaptersByVolume
-GET {{baseUrl}}/chapter/volume/4c6df8cc-ff4d-4ea4-a92a-771870022df7
+GET {{baseUrl}}/chapter/volume/52ad5743-54e4-4107-a387-2d5774a3eeb0
 Authorization: Bearer {{jwtToken}}
 
 ### Get All story chapter with numbers
 # @name getChaptersByVolume
-GET {{baseUrl}}/chapter/story/29f4b3f8-ba63-4273-a3e6-940fa7a02d69/all
+GET {{baseUrl}}/chapter/story/25d8d2f0-a3e6-4ae4-b385-0be9f67d51d5/all
 Authorization: Bearer {{jwtToken}}
 
 ### Get Chapter by Id
@@ -248,7 +248,6 @@ Authorization: Bearer {{jwtToken}}
 ### Ver todos os progressos de leitura
 # @name readingProgress
 GET {{baseUrl}}/reading-progress
-Content-Type: application/json
 Authorization: Bearer {{jwtToken}}
 
 ### Progresso de leitura
@@ -258,8 +257,8 @@ Content-Type: application/json
 Authorization: Bearer {{jwtToken}}
 
 {
-  "storyId": "29f4b3f8-ba63-4273-a3e6-940fa7a02d69",
-  "chapterId": "123acb61-cabd-4465-943e-3f75647f8b1e",
+  "storyId": "25d8d2f0-a3e6-4ae4-b385-0be9f67d51d5",
+  "chapterId": "1d87db20-40e6-4611-bd39-44c7937a2b96",
   "force": true
 }
 
@@ -270,7 +269,7 @@ Content-Type: application/json
 Authorization: Bearer {{jwtToken}}
 
 {
-  "storyId": "29f4b3f8-ba63-4273-a3e6-940fa7a02d69"
+  "storyId": "25d8d2f0-a3e6-4ae4-b385-0be9f67d51d5"
 }
 
 ### Remover história da library
@@ -296,4 +295,40 @@ Authorization: Bearer {{jwtToken}}
 ### Listar todas as histórias da library do usuário
 # @name getLibrary
 GET {{baseUrl}}/library
+Authorization: Bearer {{jwtToken}}
+
+### create comment in storie
+# @name postStorieComment
+POST {{baseUrl}}/comment
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "body": "Show de bola ewrrwr!",
+  "targetType": "story",
+  "targetId": "ed14c3be-4831-432f-b461-03bfcc351cfc",
+  "rating": {
+    "writingQuality": 5,
+    "updateStability": 4,
+    "plotDevelopment": 4,
+    "charactersBuilding": 4,
+    "worldBuilding": 5
+  }
+}
+
+### create comment in chapter
+# @name postStorieComment
+POST {{baseUrl}}/comment
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "body": "Que capitulo 2 incrivel",
+  "targetType": "chapter",
+  "targetId": "da953afd-0d2a-47c0-9fef-050885667838"
+}
+
+### get target comments
+# @name getTargetWithComments
+GET {{baseUrl}}/comment/chapter/8c736617-387e-4e9f-a4cc-b7f429c94329
 Authorization: Bearer {{jwtToken}}
