@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseEnumPipe,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
@@ -16,6 +18,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { CreateRatingDto } from 'src/rating/dto/create-rating.dto';
 import { CommentTarget } from './entities/comment-entity';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Controller('comment')
 export class CommentController {
@@ -38,5 +41,21 @@ export class CommentController {
     @Query() pagination: PaginationDto,
   ) {
     return this.commentService.findByTarget(targetType, targetId, pagination);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() updateCommentDto: UpdateCommentDto,
+  ) {
+    return this.commentService.updateComment(id, req.user, updateCommentDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async delete(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.commentService.deleteComment(id, req.user);
   }
 }

@@ -7,7 +7,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "publisher@email.com",
+  "email": "reader@email.com",
   "password": "123456"
 }
 
@@ -169,14 +169,14 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "quatorze anúncio",
+  "title": "Segundo anúncio",
   "image": "https://example.com/image.jpg",
   "content": "Conteúdo do anúncio."
 }
 
 ### Announcement - Buscar por id (Pública)
 # @name getAnnouncementById
-GET {{baseUrl}}/announcement/03a396c5-6a4b-491a-9fa6-0556bcc2a5e9
+GET {{baseUrl}}/announcement/3df3d2e7-bbd0-4d5e-acf9-3cf616b92e8b
 
 ### Announcement - Buscar todos ativos (Pública)
 # @name getActiveAnnouncements
@@ -189,7 +189,7 @@ Authorization: Bearer {{jwtToken}}
 
 ### Announcement - Atualizar (Publisher)
 # @name updateAnnouncement
-PATCH {{baseUrl}}/announcement/c8765f66-fb9f-4465-8477-b78e9f5e3168
+PATCH {{baseUrl}}/announcement/3df3d2e7-bbd0-4d5e-acf9-3cf616b92e8b
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
@@ -317,7 +317,7 @@ Content-Type: application/json
 }
 
 ### create comment in chapter
-# @name postStorieComment
+# @name postChapterComment
 POST {{baseUrl}}/comment
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
@@ -328,7 +328,53 @@ Content-Type: application/json
   "targetId": "da953afd-0d2a-47c0-9fef-050885667838"
 }
 
+### create comment in annoucement
+# @name postAnoucemmetnComment
+POST {{baseUrl}}/comment
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "body": "Que anuncio incrivel",
+  "targetType": "annoucement",
+  "targetId": "3df3d2e7-bbd0-4d5e-acf9-3cf616b92e8b"
+}
+
 ### get target comments
 # @name getTargetWithComments
-GET {{baseUrl}}/comment/chapter/8c736617-387e-4e9f-a4cc-b7f429c94329
+GET {{baseUrl}}/comment/story/ed14c3be-4831-432f-b461-03bfcc351cfc
+Authorization: Bearer {{jwtToken}}
+
+### update comment by id
+# @name updateComment
+PUT {{baseUrl}}/comment/ac5ace03-28e2-4117-a551-815cbc0462df
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "body": "Show de bola editado 3"
+}
+
+### update rating by story ID
+# @name updateRating
+PUT {{baseUrl}}/rating/ed14c3be-4831-432f-b461-03bfcc351cfc
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "writingQuality": 5,
+  "updateStability": 5,
+  "plotDevelopment": 5,
+  "charactersBuilding": 5,
+  "worldBuilding": 5
+}
+
+### get user rating by story ID
+# @name updateRating
+GET {{baseUrl}}/rating/ed14c3be-4831-432f-b461-03bfcc351cfc
+Authorization: Bearer {{jwtToken}}
+
+### delete user comment by comment ID
+# @name deleteComment
+DELETE  {{baseUrl}}/comment/ac5ace03-28e2-4117-a551-815cbc0462df
 Authorization: Bearer {{jwtToken}}

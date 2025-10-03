@@ -1,5 +1,7 @@
+import { Comment } from 'src/comment/entities/comment-entity';
 import { Story } from 'src/story/entities/story.entity';
 import { User } from 'src/user/entities/user.entity';
+
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,6 +9,8 @@ import {
   ManyToOne,
   CreateDateColumn,
   Index,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity()
@@ -20,6 +24,10 @@ export class Rating {
 
   @ManyToOne(() => Story, (story) => story.ratings, { onDelete: 'CASCADE' })
   story: Story;
+
+  @OneToOne(() => Comment, { onDelete: 'CASCADE' })
+  @JoinColumn()
+  comment: Comment;
 
   @Column({ type: 'int' })
   writingQuality: number;

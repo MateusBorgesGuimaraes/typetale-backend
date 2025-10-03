@@ -182,6 +182,7 @@ export class CommentService {
     }
 
     Object.assign(comment, updateDto);
+    console.log('comment', comment);
     return this.commentRepository.save(comment);
   }
 

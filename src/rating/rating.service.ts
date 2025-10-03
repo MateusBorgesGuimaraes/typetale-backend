@@ -9,6 +9,7 @@ import { User } from 'src/user/entities/user.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { Rating } from './entities/rating-entity';
 import { CreateRatingDto } from './dto/create-rating.dto';
+import { UpdateRatingDto } from './dto/update-rating.dto';
 
 @Injectable()
 export class RatingService {
@@ -64,7 +65,7 @@ export class RatingService {
   async updateRating(
     storyId: string,
     userId: string,
-    updateRatingDto: CreateRatingDto,
+    updateRatingDto: UpdateRatingDto,
   ) {
     const rating = await this.ratingRepository.findOne({
       where: {
@@ -95,21 +96,5 @@ export class RatingService {
     }
 
     return rating;
-  }
-
-  async deleteRating(storyId: string, userId: string) {
-    const rating = await this.ratingRepository.findOne({
-      where: {
-        user: { id: userId },
-        story: { id: storyId },
-      },
-    });
-
-    if (!rating) {
-      throw new NotFoundException('Rating not found');
-    }
-
-    await this.ratingRepository.remove(rating);
-    return { message: 'Rating deleted successfully' };
   }
 }

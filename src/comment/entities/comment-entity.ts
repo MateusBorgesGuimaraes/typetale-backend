@@ -40,7 +40,6 @@ export class Comment {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToOne(() => Rating, { nullable: true, onDelete: 'CASCADE' })
-  @JoinColumn()
+  @OneToOne(() => Rating, (rating) => rating.comment, { nullable: true })
   rating?: Rating;
 }

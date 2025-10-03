@@ -128,16 +128,14 @@ export class StoryService {
         author: true,
       },
     });
-
     if (!story) {
       throw new NotFoundException('Story not found');
     }
-
     if (authorId !== story.author.id) {
       throw new ForbiddenException('You are not allowed to update this story');
     }
 
-    const potentialUpdates: Partial<typeof story> = {
+    const potentialUpdates = {
       title: updateStoryDto.title,
       slug:
         updateStoryDto.title && updateStoryDto.title !== story.title
@@ -151,10 +149,10 @@ export class StoryService {
       tags: updateStoryDto.tags,
     };
 
-    const updatedData: Partial<typeof story> = {};
+    const updatedData: Record<string, any> = {};
     for (const [key, value] of Object.entries(potentialUpdates)) {
       if (value !== undefined && (story as any)[key] !== value) {
-        (updatedData as any)[key] = value;
+        updatedData[key] = value;
       }
     }
 
@@ -168,11 +166,9 @@ export class StoryService {
       where: { id },
       relations: { author: true },
     });
-
     if (!updatedStory) {
       throw new NotFoundException('Story not found');
     }
-
     return updatedStory;
   }
 
