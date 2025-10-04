@@ -1,13 +1,21 @@
 @baseUrl = http://localhost:3000
 @jwtToken = {{authLogin.response.body.accessToken}}
 
+@imagePath = {{uploadImage.response.body.url}}
+
+@avatarPath = {{uploadAvatar.response.body.url}}
+
+@imageUrl = {{baseUrl}}{{imagePath}}
+
+@imageUrl = {{baseUrl}}{{avatarPath}}
+
 ### Auth Login
 # @name authLogin
 POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "reader@email.com",
+  "email": "lara@email.com",
   "password": "123456"
 }
 
@@ -17,10 +25,10 @@ POST {{baseUrl}}/user
 Content-Type: application/json
 
 {
-  "username": "publisher",
-  "email": "publisher@email.com",
+  "username": "lara",
+  "email": "lara@email.com",
   "password": "123456",
-  "avatarUrl": "urldaimagem"
+  "avatarUrl": "/uploads/avatars/2025-10-04/1759591586106-8xpz0l.jpg"
 }
 
 ### Get one user
@@ -35,11 +43,11 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "The fire sword",
-  "coverUrl": "https://example.com/covers/fire-sword.jpg",
-  "storyType": "original",
+  "title": "Harry Potter, What if story",
+  "coverUrl": "/uploads/covers/2025-10-04/1759591198114-8th88j.jpg",
+  "storyType": "fanfic",
   "synopsis": "here are the synopsis od the story",
-  "tags": ["acao", "aventura", "drama"],
+  "tags": ["overpowered", "aventure", "drama"],
   "mainGenre": "fantasy",
   "language": "english"
 }
@@ -210,9 +218,9 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "Highlight Title 7",
-  "banner": "https://example.com/banner.jpg",
-  "link": "https://example.com"
+  "title": "Highlight Title 1",
+  "banner": "/uploads/banners/2025-10-04/1759591901360-wvudo1.png",
+  "link": "gfgfdgdfgg"
 }
 
 ### Get all Highlights (Public)
@@ -304,9 +312,9 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "body": "Show de bola ewrrwr!",
+  "body": "Show de bola a historia!",
   "targetType": "story",
-  "targetId": "ed14c3be-4831-432f-b461-03bfcc351cfc",
+  "targetId": "55dd6b42-a0c7-4619-8318-cff950711f73",
   "rating": {
     "writingQuality": 5,
     "updateStability": 4,
@@ -342,7 +350,7 @@ Content-Type: application/json
 
 ### get target comments
 # @name getTargetWithComments
-GET {{baseUrl}}/comment/story/ed14c3be-4831-432f-b461-03bfcc351cfc
+GET {{baseUrl}}/comment/story/55dd6b42-a0c7-4619-8318-cff950711f73
 Authorization: Bearer {{jwtToken}}
 
 ### update comment by id
@@ -371,10 +379,79 @@ Content-Type: application/json
 
 ### get user rating by story ID
 # @name updateRating
-GET {{baseUrl}}/rating/ed14c3be-4831-432f-b461-03bfcc351cfc
+GET {{baseUrl}}/rating/55dd6b42-a0c7-4619-8318-cff950711f73
 Authorization: Bearer {{jwtToken}}
 
 ### delete user comment by comment ID
 # @name deleteComment
-DELETE  {{baseUrl}}/comment/ac5ace03-28e2-4117-a551-815cbc0462df
+DELETE  {{baseUrl}}/comment/1b5de4dc-99bd-4e1d-a94f-beed8d24b4d1
 Authorization: Bearer {{jwtToken}}
+
+### Upload Images
+# @name uploadImage
+POST {{baseUrl}}/upload
+Authorization: Bearer {{jwtToken}}
+Content-Type: multipart/form-data; boundary=----BryenFormBoundary
+
+------BryenFormBoundary
+Content-Disposition: form-data; name="file"; filename="cover-5.jpg"
+Content-Type: image/jpg
+
+< ../dev/images/cover-5.jpg
+------BryenFormBoundary--
+
+### read Image
+# @name readImage
+GET {{baseUrl}}/uploads/banners/2025-10-04/1759591901360-wvudo1.png
+
+### Upload Avatar
+# @name uploadAvatar
+POST {{baseUrl}}/upload/avatar
+Authorization: Bearer {{jwtToken}}
+Content-Type: multipart/form-data; boundary=----BryenFormBoundary
+
+------BryenFormBoundary
+Content-Disposition: form-data; name="file"; filename="profile-1.jpg"
+Content-Type: image/jpg
+
+< ../dev/images/profile-1.jpg
+------BryenFormBoundary--
+
+### Upload Story Cover
+# @name uploadAvatar
+POST {{baseUrl}}/upload/cover
+Authorization: Bearer {{jwtToken}}
+Content-Type: multipart/form-data; boundary=----BryenFormBoundary
+
+------BryenFormBoundary
+Content-Disposition: form-data; name="file"; filename="cover-1.jpg"
+Content-Type: image/jpg
+
+< ../dev/images/cover-1.jpg
+------BryenFormBoundary--
+
+### Upload Banner highligth
+# @name uploadBanner
+POST {{baseUrl}}/upload/banner
+Authorization: Bearer {{jwtToken}}
+Content-Type: multipart/form-data; boundary=----BryenFormBoundary
+
+------BryenFormBoundary
+Content-Disposition: form-data; name="file"; filename="destaque-1.jpg"
+Content-Type: image/jpg
+
+< ../dev/images/destaque-1.jpg
+------BryenFormBoundary--
+
+### Upload announcement
+# @name uploadAnnouncement
+POST {{baseUrl}}/upload/announcement
+Authorization: Bearer {{jwtToken}}
+Content-Type: multipart/form-data; boundary=----BryenFormBoundary
+
+------BryenFormBoundary
+Content-Disposition: form-data; name="file"; filename="anuncio-1.jpg"
+Content-Type: image/jpg
+
+< ../dev/images/anuncio-1.jpg
+------BryenFormBoundary--

@@ -3,7 +3,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUrl,
   IsArray,
   IsNumber,
   Min,
@@ -21,7 +20,7 @@ export class CreateStoryDto {
   @IsNotEmpty()
   title: string;
 
-  @IsUrl()
+  @IsString()
   @IsNotEmpty()
   coverUrl: string;
 

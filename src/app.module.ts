@@ -14,6 +14,7 @@ import { AnnouncementModule } from './announcement/announcement.module';
 import { HighlightModule } from './highlight/highlight.module';
 import { CommentModule } from './comment/comment.module';
 import { RatingModule } from './rating/rating.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { RatingModule } from './rating/rating.module';
     LibraryModule,
     CommentModule,
     RatingModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],
