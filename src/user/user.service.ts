@@ -1,3 +1,4 @@
+import { UploadService } from './../upload/upload.service';
 import {
   ConflictException,
   Injectable,
@@ -16,6 +17,7 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly hashingService: HashingService,
+    private readonly uploadService: UploadService,
   ) {}
   async create(createUserDto: CreateUserDto) {
     const emailExist = await this.userRepository.exists({
@@ -31,6 +33,8 @@ export class UserService {
     });
 
     if (usernameExist || emailExist) {
+      if (createUserDto.avatarUrl)
+        await this.uploadService.deleteImageFromUrl(createUserDto.avatarUrl);
       throw new ConflictException('Email or username already exists');
     }
 
@@ -45,8 +49,15 @@ export class UserService {
       avatarUrl: createUserDto.avatarUrl,
     });
 
-    const created = await this.userRepository.save(newUser);
-    return created;
+    try {
+      const created = await this.userRepository.save(newUser);
+      return created;
+    } catch (error) {
+      if (createUserDto.avatarUrl) {
+        await this.uploadService.deleteImageFromUrl(createUserDto.avatarUrl);
+      }
+      throw error;
+    }
   }
 
   findByEmail(email: string) {

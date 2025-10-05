@@ -12,6 +12,7 @@ import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 import { User, UserRole } from 'src/user/entities/user.entity';
 import { ResponseAnnouncementDto } from './dto/response-announcement.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { UploadService } from 'src/upload/upload.service';
 
 @Injectable()
 export class AnnouncementService {
@@ -20,29 +21,42 @@ export class AnnouncementService {
     private readonly announcementRepository: Repository<Announcement>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly uploadService: UploadService,
   ) {}
 
   async create(createDto: CreateAnnouncementDto, authorId: string) {
     const author = await this.userRepository.findOneBy({ id: authorId });
+
     if (!author || author.role !== UserRole.PUBLISHER) {
+      await this.uploadService.deleteImageFromUrl(createDto.image);
       throw new ForbiddenException('Only publishers can create announcements');
     }
+
     const activeCount = await this.announcementRepository.count({
       where: { isActive: true },
     });
+
     if (activeCount >= 3 && createDto['isActive']) {
+      await this.uploadService.deleteImageFromUrl(createDto.image);
       throw new BadRequestException(
         'Only 3 announcements can be active at a time',
       );
     }
+
     const announcement = this.announcementRepository.create({
       ...createDto,
       author,
       isActive: !!createDto['isActive'],
       publishedAt: createDto['isActive'] ? new Date() : undefined,
     });
-    await this.announcementRepository.save(announcement);
-    return new ResponseAnnouncementDto(announcement);
+
+    try {
+      await this.announcementRepository.save(announcement);
+      return new ResponseAnnouncementDto(announcement);
+    } catch (error) {
+      await this.uploadService.deleteImageFromUrl(createDto.image);
+      throw error;
+    }
   }
 
   async findOne(id: string) {
@@ -83,7 +97,11 @@ export class AnnouncementService {
       where: { id },
       relations: ['author'],
     });
-    if (!announcement) throw new NotFoundException('Announcement not found');
+
+    if (!announcement) {
+      throw new NotFoundException('Announcement not found');
+    }
+
     if (announcement.author.id !== userId)
       throw new ForbiddenException(
         'Only the publisher author can update this announcement',
@@ -101,9 +119,15 @@ export class AnnouncementService {
       }
       announcement.publishedAt = new Date();
     }
+
     if (updateDto.isActive === false) {
       announcement.publishedAt = undefined;
     }
+
+    if (updateDto.image !== announcement.image) {
+      await this.uploadService.deleteImageFromUrl(announcement.image);
+    }
+
     Object.assign(announcement, updateDto);
     await this.announcementRepository.save(announcement);
     return new ResponseAnnouncementDto(announcement);
@@ -119,6 +143,8 @@ export class AnnouncementService {
       throw new ForbiddenException(
         'Only the publisher author can delete this announcement',
       );
+
+    await this.uploadService.deleteImageFromUrl(announcement.image);
     return await this.announcementRepository.delete(id);
   }
 }

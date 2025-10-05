@@ -12,6 +12,7 @@ import { UpdateHighlightDto } from './dto/update-highlight.dto';
 import { User, UserRole } from 'src/user/entities/user.entity';
 import { ResponseHighlightDto } from './dto/response-highlight.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { UploadService } from 'src/upload/upload.service';
 
 @Injectable()
 export class HighlightService {
@@ -20,17 +21,22 @@ export class HighlightService {
     private readonly highlightRepository: Repository<Highlight>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly uploadService: UploadService,
   ) {}
 
   async create(createDto: CreateHighlightDto, authorId: string) {
     const author = await this.userRepository.findOneBy({ id: authorId });
     if (!author || author.role !== UserRole.PUBLISHER) {
+      await this.uploadService.deleteImageFromUrl(createDto.banner);
       throw new ForbiddenException('Only publishers can create highlights');
     }
+
     const activeCount = await this.highlightRepository.count({
       where: { isActive: true },
     });
+
     if (activeCount >= 4 && createDto['isActive']) {
+      await this.uploadService.deleteImageFromUrl(createDto.banner);
       throw new BadRequestException(
         'Only 4 highlights can be active at a time',
       );
@@ -40,8 +46,14 @@ export class HighlightService {
       author,
       isActive: !!createDto['isActive'],
     });
-    await this.highlightRepository.save(highlight);
-    return new ResponseHighlightDto(highlight);
+    try {
+      await this.highlightRepository.save(highlight);
+
+      return new ResponseHighlightDto(highlight);
+    } catch (error) {
+      await this.uploadService.deleteImageFromUrl(createDto.banner);
+      throw error;
+    }
   }
 
   async findOne(id: string) {
@@ -80,11 +92,14 @@ export class HighlightService {
       where: { id },
       relations: ['author'],
     });
+
     if (!highlight) throw new NotFoundException('Highlight not found');
+
     if (highlight.author.id !== userId)
       throw new ForbiddenException(
         'Only the publisher author can update this highlight',
       );
+
     if (updateDto.isActive && !highlight.isActive) {
       const activeCount = await this.highlightRepository.count({
         where: { isActive: true },
@@ -95,6 +110,11 @@ export class HighlightService {
         );
       }
     }
+
+    if (updateDto.banner !== highlight.banner) {
+      await this.uploadService.deleteImageFromUrl(highlight.banner);
+    }
+
     Object.assign(highlight, updateDto);
     await this.highlightRepository.save(highlight);
     return new ResponseHighlightDto(highlight);
@@ -105,11 +125,16 @@ export class HighlightService {
       where: { id },
       relations: ['author'],
     });
+
     if (!highlight) throw new NotFoundException('Highlight not found');
+
     if (highlight.author.id !== userId)
       throw new ForbiddenException(
         'Only the publisher author can delete this highlight',
       );
+
+    await this.uploadService.deleteImageFromUrl(highlight.banner);
+
     await this.highlightRepository.delete(id);
     return { message: 'Highlight deleted successfully' };
   }

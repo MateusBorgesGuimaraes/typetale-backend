@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { fileTypeFromBuffer } from 'file-type';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { generateRandomSuffix } from 'src/common/utils/generate-random-suffix';
 import { ImageType, IMAGE_CONFIGS } from './upload.config';
@@ -84,5 +84,17 @@ export class UploadService {
   async handleUpload(file: Express.Multer.File) {
     const result = await this.uploadImage(file, ImageType.AVATAR);
     return { url: result.url };
+  }
+
+  async deleteImageFromUrl(url: string): Promise<void> {
+    try {
+      const filePath = resolve(__dirname, '..', '..', url.replace(/^\//, ''));
+
+      if (existsSync(filePath)) {
+        unlinkSync(filePath);
+      }
+    } catch (error) {
+      console.error('Error deleting image:', error);
+    }
   }
 }

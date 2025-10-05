@@ -12,18 +12,21 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { createSlug } from 'src/common/utils/create-slug';
 import { StoryFilterDto } from './dto/story-filter.dto';
+import { UploadService } from 'src/upload/upload.service';
 
 @Injectable()
 export class StoryService {
   constructor(
     @InjectRepository(Story) private storyRepository: Repository<Story>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly uploadService: UploadService,
   ) {}
 
   async create(id: string, createStoryDto: CreateStoryDto) {
     const user = await this.userRepository.findOneBy({ id });
 
     if (!user) {
+      await this.uploadService.deleteImageFromUrl(createStoryDto.coverUrl);
       throw new NotFoundException('User not found');
     }
 
@@ -33,7 +36,12 @@ export class StoryService {
       author: user,
     });
 
-    return this.storyRepository.save(post);
+    try {
+      return this.storyRepository.save(post);
+    } catch (error) {
+      await this.uploadService.deleteImageFromUrl(createStoryDto.coverUrl);
+      throw error;
+    }
   }
 
   async findOneBySlug(slug: string) {
@@ -128,11 +136,17 @@ export class StoryService {
         author: true,
       },
     });
+
     if (!story) {
       throw new NotFoundException('Story not found');
     }
+
     if (authorId !== story.author.id) {
       throw new ForbiddenException('You are not allowed to update this story');
+    }
+
+    if (updateStoryDto.coverUrl !== story.coverUrl) {
+      await this.uploadService.deleteImageFromUrl(story.coverUrl);
     }
 
     const potentialUpdates = {
@@ -150,6 +164,7 @@ export class StoryService {
     };
 
     const updatedData: Record<string, any> = {};
+
     for (const [key, value] of Object.entries(potentialUpdates)) {
       if (value !== undefined && (story as any)[key] !== value) {
         updatedData[key] = value;
@@ -166,9 +181,11 @@ export class StoryService {
       where: { id },
       relations: { author: true },
     });
+
     if (!updatedStory) {
       throw new NotFoundException('Story not found');
     }
+
     return updatedStory;
   }
 
@@ -185,6 +202,8 @@ export class StoryService {
     if (authorId !== story.author.id) {
       throw new ForbiddenException('You are not allowed to delete this story');
     }
+
+    await this.uploadService.deleteImageFromUrl(story.coverUrl);
 
     await this.storyRepository.delete(id);
 

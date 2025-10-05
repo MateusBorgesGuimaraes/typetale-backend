@@ -5,9 +5,9 @@ export class CreateAnnouncementDto {
   @IsNotEmpty()
   title: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  image?: string;
+  image: string;
 
   @IsString()
   @IsNotEmpty()

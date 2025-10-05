@@ -16,8 +16,8 @@ export class Announcement {
   @Column({ length: 255 })
   title: string;
 
-  @Column({ type: 'text', nullable: true })
-  image?: string;
+  @Column({ type: 'text' })
+  image: string;
 
   @Column({ type: 'text' })
   content: string;

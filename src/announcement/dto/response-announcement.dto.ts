@@ -3,7 +3,7 @@ import { Announcement } from '../entities/announcement.entity';
 export class ResponseAnnouncementDto {
   readonly id: string;
   readonly title: string;
-  readonly image?: string;
+  readonly image: string;
   readonly content: string;
   readonly publishedAt?: Date;
   readonly isActive: boolean;
