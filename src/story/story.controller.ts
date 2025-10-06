@@ -33,6 +33,16 @@ export class StoryController {
     return new ResponseStoryDto(story);
   }
 
+  @Get('/random')
+  async getRandomStories() {
+    return this.storyService.getRandomStories();
+  }
+
+  @Get('recently-updated')
+  async getRecentlyUpdated() {
+    return this.storyService.getRecentlyUpdated();
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async findAllUserStories(@Req() req: AuthenticatedRequest) {
@@ -79,5 +89,20 @@ export class StoryController {
   @Delete(':id')
   async deleteById(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return await this.storyService.deleteById(id, req.user.id);
+  }
+
+  @Get('top/fanfics')
+  async getTopFanfics() {
+    return this.storyService.getTopFanfics();
+  }
+
+  @Get('top/originals')
+  async getTopOriginals() {
+    return this.storyService.getTopOriginals();
+  }
+
+  @Get(':id/recommendations')
+  async getRecommendations(@Param('id') id: string) {
+    return this.storyService.getRecommendations(id);
   }
 }

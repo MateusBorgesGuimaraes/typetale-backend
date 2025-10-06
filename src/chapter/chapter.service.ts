@@ -79,31 +79,72 @@ export class ChapterService {
       slug: createSlug(createChapterDto.title),
       content: createChapterDto.content,
       isDraft: createChapterDto.isDraft,
-      publishedAt: createChapterDto.isDraft ? undefined : new Date(),
+      publishedAt: createChapterDto.isDraft ? null : new Date(),
       position: nextPosition,
       wordsCount,
       volume,
     });
 
-    await this.volumeRepository.save({
-      ...volume,
-      chaptersCount: volume.chaptersCount + 1,
-    });
-
-    await this.storyService.incrementChaptersCount(volume.story);
-
-    if (chapter.isDraft) {
-      await this.storyService.incrementPublishedChaptersCount(volume.story);
-    }
-
-    await this.storyService.changeWordsCount(volume.story, wordsCount);
-
     const savedChapter = await this.chapterRepository.save(chapter);
+
+    if (!savedChapter.isDraft) {
+      await this.volumeRepository.save({
+        ...volume,
+        chaptersCount: volume.chaptersCount + 1,
+      });
+
+      await this.storyService.incrementChaptersCount(volume.story);
+
+      await this.storyService.incrementPublishedChaptersCount(volume.story);
+
+      await this.storyService.changeWordsCount(volume.story, wordsCount);
+    }
 
     return {
       ...savedChapter,
       visualPosition: globalPosition,
     };
+  }
+
+  async publishChapter(chapterId: string, authorId: string) {
+    const chapter = await this.chapterRepository.findOne({
+      where: { id: chapterId },
+      relations: ['volume', 'volume.story', 'volume.story.author'],
+    });
+
+    if (!chapter) {
+      throw new NotFoundException('Chapter not found');
+    }
+
+    if (chapter.volume.story.author.id !== authorId) {
+      throw new ForbiddenException('You are not the author of this story');
+    }
+
+    if (!chapter.isDraft) {
+      throw new BadRequestException('Chapter is already published');
+    }
+
+    chapter.isDraft = false;
+    chapter.publishedAt = new Date();
+
+    const savedChapter = await this.chapterRepository.save(chapter);
+
+    await this.volumeRepository.increment(
+      { id: chapter.volume.id },
+      'chaptersCount',
+      1,
+    );
+
+    await this.storyService.incrementChaptersCount(chapter.volume.story);
+    await this.storyService.incrementPublishedChaptersCount(
+      chapter.volume.story,
+    );
+    await this.storyService.changeWordsCount(
+      chapter.volume.story,
+      chapter.wordsCount,
+    );
+
+    return savedChapter;
   }
 
   async reorderChapter(
@@ -342,7 +383,6 @@ export class ChapterService {
       select: ['id', 'createdAt'],
     });
 
-    // Busca todos os capítulos de todos os volumes da história
     const allChapters = await this.chapterRepository.find({
       where: { volume: { story: { id: storyId } } },
       relations: ['volume'],
@@ -350,7 +390,6 @@ export class ChapterService {
       order: { position: 'ASC' },
     });
 
-    // Agrupa capítulos por volume
     const chaptersByVolume = volumes.map((volume) => ({
       volumeId: volume.id,
       chapters: allChapters
@@ -360,7 +399,6 @@ export class ChapterService {
         ),
     }));
 
-    // Calcula posições globais
     let globalPosition = 1;
     const positionMap = new Map<string, number>();
 
@@ -371,7 +409,6 @@ export class ChapterService {
       }
     }
 
-    // Aplica as posições aos capítulos fornecidos
     return chapters.map((chapter) => ({
       ...chapter,
       visualPosition: positionMap.get(chapter.id) || 1,

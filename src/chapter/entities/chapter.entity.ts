@@ -38,8 +38,8 @@ export class Chapter {
   @Index()
   position: string;
 
-  @Column({ nullable: true })
-  publishedAt?: Date;
+  @Column({ type: 'datetime', nullable: true, default: null })
+  publishedAt: Date | null;
 
   @Column({ default: 0 })
   wordsCount: number;

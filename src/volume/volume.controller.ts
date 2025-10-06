@@ -38,6 +38,7 @@ export class VolumeController {
   @Get('/:volumeId')
   async findOneVolume(@Param('volumeId') volumeId: string) {
     const volume = await this.volumeService.findOneVolume(volumeId);
+    console.log('volume', volume);
     return new ResponseVolumeDto(volume);
   }
 

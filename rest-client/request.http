@@ -15,7 +15,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "lara@email.com",
+  "email": "writer2@email.com",
   "password": "123456"
 }
 
@@ -25,10 +25,10 @@ POST {{baseUrl}}/user
 Content-Type: application/json
 
 {
-  "username": "lara",
-  "email": "lara@email.com",
+  "username": "writer2",
+  "email": "writer2@email.com",
   "password": "123456",
-  "avatarUrl": "/uploads/avatars/2025-10-04/1759591586106-8xpz0l.jpg"
+  "avatarUrl": "/uploads/avatars/2025-10-04/1759610847416-2qzg4r.jpg"
 }
 
 ### Get one user
@@ -43,14 +43,15 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "Harry Potter, What if story",
-  "coverUrl": "/uploads/covers/2025-10-04/1759591198114-8th88j.jpg",
-  "storyType": "fanfic",
-  "synopsis": "here are the synopsis od the story",
-  "tags": ["overpowered", "aventure", "drama"],
-  "mainGenre": "fantasy",
-  "language": "english"
-}
+  "title": "The Clockmaker’s Secret",
+  "coverUrl": "https://example.com/the-clockmakers-secret.jpg",
+  "storyType": "original",
+  "synopsis": "A reclusive clockmaker finds that his creations can alter time — but each use demands a painful sacrifice.",
+  "tags": ["sci-fi", "mystery", "drama", "time travel"],
+  "mainGenre": "scifi",
+    "language": "english",
+    "status": "COMPLETED"
+  }
 
 ### Find One Story by slug
 # @name findStoryBySlug
@@ -84,15 +85,35 @@ Authorization: Bearer {{jwtToken}}
 GET {{baseUrl}}/story/me
 Authorization: Bearer {{jwtToken}}
 
+### Get Top Fanfics story
+# @name getTopFanfics
+GET {{baseUrl}}/story/top/fanfics
+
+### Get Top Originals story
+# @name getTopOriginals
+GET {{baseUrl}}/story/top/originals
+
+### Get random
+# @name getRandom
+GET {{baseUrl}}/story/random
+
+### Get recommendation
+# @name getRecommendations
+GET {{baseUrl}}/story/dd8aae3a-b95f-41f5-947b-afbae356da4a/recommendations
+
+### Get recently update
+# @name getRecentlyUpdated
+GET {{baseUrl}}/story/recently-updated
+
 ### Create Volume
 # @name createVolume
-POST {{baseUrl}}/volume/create/ed14c3be-4831-432f-b461-03bfcc351cfc
+POST {{baseUrl}}/volume/create/1a334963-22ad-4c25-af4c-a47d817d3d71
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "Volume 1 of fire sword",
-  "description": "Here is the description of volume 1 of fire sword"
+  "title": "Volume 1",
+  "description": "Here is the description of volume 1"
 }
 
 ### Update Volume
@@ -106,7 +127,7 @@ Content-Type: application/json
 
 ### Get Volume by Id
 # @name getVolumeById
-GET {{baseUrl}}/volume/9ec8bc40-aeda-4564-b2ff-f7cfb8a52538
+GET {{baseUrl}}/volume/9b658634-9ee0-4a48-9931-12ba77b9e2d5
 Authorization: Bearer {{jwtToken}}
 
 ### Get Volumes by Story
@@ -121,13 +142,13 @@ Authorization: Bearer {{jwtToken}}
 
 ### Create Chapter
 # @name createChapter
-POST {{baseUrl}}/chapter/create/52ad5743-54e4-4107-a387-2d5774a3eeb0
+POST {{baseUrl}}/chapter/create/d5cfa0fb-3e8b-4df3-94a8-1db943e89988
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-   "title": "chaper 4 fire sword",
-   "content": "Here is the content of fire sword",
+   "title": "digital soule 324",
+   "content": "gfgdfgd45 y ghb h4y ",
    "isDraft": true
 }
 
@@ -138,7 +159,7 @@ Authorization: Bearer {{jwtToken}}
 
 ### Get All story chapter with numbers
 # @name getChaptersByVolume
-GET {{baseUrl}}/chapter/story/25d8d2f0-a3e6-4ae4-b385-0be9f67d51d5/all
+GET {{baseUrl}}/chapter/story/08572c11-0c41-4f7d-851b-5be80e4584cf/all
 Authorization: Bearer {{jwtToken}}
 
 ### Get Chapter by Id
@@ -402,7 +423,7 @@ Content-Type: image/jpg
 
 ### read Image
 # @name readImage
-GET {{baseUrl}}/uploads/banners/2025-10-04/1759591901360-wvudo1.png
+GET {{baseUrl}}/uploads/avatars/2025-10-04/1759610847416-2qzg4r.jpg
 
 ### Upload Avatar
 # @name uploadAvatar

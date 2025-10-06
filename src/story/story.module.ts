@@ -5,9 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Story } from './entities/story.entity';
 import { User } from 'src/user/entities/user.entity';
 import { UploadModule } from 'src/upload/upload.module';
+import { ChapterModule } from 'src/chapter/chapter.module';
+import { Chapter } from 'src/chapter/entities/chapter.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Story, User]), UploadModule],
+  imports: [TypeOrmModule.forFeature([Story, User, Chapter]), UploadModule],
   controllers: [StoryController],
   providers: [StoryService],
   exports: [StoryService],

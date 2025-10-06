@@ -7,18 +7,21 @@ import {
 import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Story } from './entities/story.entity';
+import { Story, StoryStatus, StoryType } from './entities/story.entity';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { createSlug } from 'src/common/utils/create-slug';
 import { StoryFilterDto } from './dto/story-filter.dto';
 import { UploadService } from 'src/upload/upload.service';
+import { Chapter } from 'src/chapter/entities/chapter.entity';
 
 @Injectable()
 export class StoryService {
   constructor(
     @InjectRepository(Story) private storyRepository: Repository<Story>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(Chapter)
+    private readonly chapterRepository: Repository<Chapter>,
     private readonly uploadService: UploadService,
   ) {}
 
@@ -313,6 +316,215 @@ export class StoryService {
     }
 
     queryBuilder.addOrderBy('story.id', 'ASC');
+  }
+
+  async getTopFanfics() {
+    const topViewed = await this.storyRepository.find({
+      where: { storyType: StoryType.FANFIC },
+      order: { viewsCount: 'DESC' },
+      take: 5,
+      relations: ['author'],
+    });
+
+    const topOngoing = await this.storyRepository.find({
+      where: {
+        storyType: StoryType.FANFIC,
+        status: StoryStatus.ONGOING,
+      },
+      order: { viewsCount: 'DESC' },
+      take: 5,
+      relations: ['author'],
+    });
+
+    const topCompleted = await this.storyRepository.find({
+      where: {
+        storyType: StoryType.FANFIC,
+        status: StoryStatus.COMPLETED,
+      },
+      order: { viewsCount: 'DESC' },
+      take: 5,
+      relations: ['author'],
+    });
+
+    return {
+      topViewed,
+      topOngoing,
+      topCompleted,
+    };
+  }
+
+  async getTopOriginals() {
+    const topViewed = await this.storyRepository.find({
+      where: { storyType: StoryType.ORIGINAL },
+      order: { viewsCount: 'DESC' },
+      take: 5,
+      relations: ['author'],
+    });
+
+    const topOngoing = await this.storyRepository.find({
+      where: {
+        storyType: StoryType.ORIGINAL,
+        status: StoryStatus.ONGOING,
+      },
+      order: { viewsCount: 'DESC' },
+      take: 5,
+      relations: ['author'],
+    });
+
+    const topCompleted = await this.storyRepository.find({
+      where: {
+        storyType: StoryType.ORIGINAL,
+        status: StoryStatus.COMPLETED,
+      },
+      order: { viewsCount: 'DESC' },
+      take: 5,
+      relations: ['author'],
+    });
+
+    return {
+      topViewed,
+      topOngoing,
+      topCompleted,
+    };
+  }
+
+  async getRandomStories() {
+    const stories = await this.storyRepository
+      .createQueryBuilder('story')
+      .leftJoinAndSelect('story.author', 'author')
+      .orderBy('RANDOM()')
+      .take(12)
+      .getMany();
+
+    return stories;
+  }
+
+  async getRecentlyUpdated() {
+    const recentStoryIds = await this.storyRepository
+      .createQueryBuilder('story')
+      .leftJoin('story.volumes', 'volume')
+      .leftJoin('volume.chapters', 'chapter')
+      .where('chapter.isDraft = :isDraft', { isDraft: false })
+      .andWhere('chapter.publishedAt IS NOT NULL')
+      .orderBy('chapter.updatedAt', 'DESC')
+      .select('DISTINCT story.id', 'id')
+      .limit(7)
+      .getRawMany();
+
+    if (recentStoryIds.length === 0) {
+      throw new NotFoundException('Stories not found');
+    }
+
+    const ids = recentStoryIds.map((item) => item.id);
+
+    const stories = await this.storyRepository
+      .createQueryBuilder('story')
+      .leftJoinAndSelect('story.author', 'author')
+      .leftJoinAndSelect('story.volumes', 'volume')
+      .leftJoinAndSelect('volume.chapters', 'chapter')
+      .where('story.id IN (:...ids)', { ids })
+      .andWhere('chapter.isDraft = :isDraft', { isDraft: false })
+      .andWhere('chapter.publishedAt IS NOT NULL')
+      .getMany();
+
+    const storiesMap = new Map();
+
+    for (const story of stories) {
+      if (!storiesMap.has(story.id)) {
+        const latestChapter = story.volumes
+          .flatMap((volume) => volume.chapters)
+          .filter((chapter) => !chapter.isDraft && chapter.publishedAt)
+          .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())[0];
+
+        if (latestChapter) {
+          storiesMap.set(story.id, {
+            story: {
+              id: story.id,
+              title: story.title,
+              slug: story.slug,
+              coverUrl: story.coverUrl,
+              storyType: story.storyType,
+              mainGenre: story.mainGenre,
+              author: {
+                id: story.author.id,
+                username: story.author.username,
+              },
+            },
+            latestChapter: {
+              id: latestChapter.id,
+              title: latestChapter.title,
+              slug: latestChapter.slug,
+              updatedAt: latestChapter.updatedAt,
+              publishedAt: latestChapter.publishedAt,
+            },
+          });
+        }
+      }
+    }
+
+    return Array.from(storiesMap.values());
+  }
+
+  async getRecommendations(storyId: string) {
+    const story = await this.storyRepository.findOne({
+      where: { id: storyId },
+    });
+
+    if (!story) {
+      throw new NotFoundException('Story not found');
+    }
+
+    let recommendationsQuery = this.storyRepository
+      .createQueryBuilder('story')
+      .leftJoinAndSelect('story.author', 'author')
+      .where('story.id != :storyId', { storyId })
+      .andWhere('story.storyType = :storyType', { storyType: story.storyType });
+
+    if (story.tags && story.tags.length > 0) {
+      const tagConditions = story.tags.map((tag, index) => {
+        return `story.tags LIKE :tag${index}`;
+      });
+
+      const tagParams = story.tags.reduce((acc, tag, index) => {
+        acc[`tag${index}`] = `%"${tag}"%`;
+        return acc;
+      }, {});
+
+      recommendationsQuery = recommendationsQuery.andWhere(
+        `(story.mainGenre = :mainGenre OR ${tagConditions.join(' OR ')})`,
+        { mainGenre: story.mainGenre, ...tagParams },
+      );
+    } else {
+      recommendationsQuery = recommendationsQuery.andWhere(
+        'story.mainGenre = :mainGenre',
+        { mainGenre: story.mainGenre },
+      );
+    }
+
+    const recommendations = await recommendationsQuery
+      .orderBy('RANDOM()')
+      .take(8)
+      .getMany();
+
+    if (recommendations.length < 8) {
+      const additionalStories = await this.storyRepository
+        .createQueryBuilder('story')
+        .leftJoinAndSelect('story.author', 'author')
+        .where('story.id != :storyId', { storyId })
+        .andWhere('story.storyType = :storyType', {
+          storyType: story.storyType,
+        })
+        .andWhere('story.id NOT IN (:...excludeIds)', {
+          excludeIds: recommendations.map((s) => s.id).concat(storyId),
+        })
+        .orderBy('story.viewsCount', 'DESC')
+        .take(8 - recommendations.length)
+        .getMany();
+
+      recommendations.push(...additionalStories);
+    }
+
+    return recommendations;
   }
 
   async incrementChaptersCount(story: Story): Promise<void> {

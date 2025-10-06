@@ -8,6 +8,7 @@ export class ResponseVolumeDto {
   readonly description?: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
+  readonly story?: { id: string; title: string; coverUrl?: string };
   readonly chapters?: {
     id: string;
     title: string;
@@ -21,6 +22,13 @@ export class ResponseVolumeDto {
     this.description = volume.description;
     this.createdAt = volume.createdAt;
     this.updatedAt = volume.updatedAt;
+    if (volume.story) {
+      this.story = {
+        id: volume.story.id,
+        title: volume.story.title,
+        coverUrl: volume.story.coverUrl,
+      };
+    }
     if (volume.chapters) {
       this.chapters = volume.chapters.map((chapter: Chapter) => ({
         id: chapter.id,
