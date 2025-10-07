@@ -40,7 +40,7 @@ export class StoryController {
 
   @Get('recently-updated')
   async getRecentlyUpdated() {
-    return this.storyService.getRecentlyUpdated();
+    return this.storyService.getRecentlyUpdatedStories();
   }
 
   @UseGuards(JwtAuthGuard)

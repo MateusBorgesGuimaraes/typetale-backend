@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { StoryService } from './story.service';
 import { StoryController } from './story.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,7 +9,11 @@ import { ChapterModule } from 'src/chapter/chapter.module';
 import { Chapter } from 'src/chapter/entities/chapter.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Story, User, Chapter]), UploadModule],
+  imports: [
+    TypeOrmModule.forFeature([Story, User, Chapter]),
+    UploadModule,
+    forwardRef(() => ChapterModule),
+  ],
   controllers: [StoryController],
   providers: [StoryService],
   exports: [StoryService],

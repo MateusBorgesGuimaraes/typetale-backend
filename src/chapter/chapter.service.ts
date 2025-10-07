@@ -444,7 +444,7 @@ export class ChapterService {
     };
   }
 
-  private async addGlobalVisualPositionsWithStoryId<
+  async addGlobalVisualPositionsWithStoryId<
     T extends { id: string; position: string },
   >(
     chapters: T[],
@@ -491,6 +491,34 @@ export class ChapterService {
       ...chapter,
       visualPosition: positionMap.get(chapter.id) || 1,
     }));
+  }
+
+  async getChapterVisualPosition(chapterId: string): Promise<number> {
+    const chapter = await this.chapterRepository.findOne({
+      where: { id: chapterId },
+      relations: ['volume', 'volume.story'],
+    });
+
+    if (!chapter) {
+      throw new NotFoundException('Chapter not found');
+    }
+
+    const allChapters = await this.chapterRepository.find({
+      where: { volume: { story: { id: chapter.volume.story.id } } },
+      relations: ['volume'],
+      order: { position: 'ASC' },
+    });
+
+    const chaptersWithPosition = await this.addGlobalVisualPositionsWithStoryId(
+      allChapters,
+      chapter.volume.story.id,
+    );
+
+    const chapterWithPosition = chaptersWithPosition.find(
+      (ch) => ch.id === chapterId,
+    );
+
+    return chapterWithPosition?.visualPosition || 1;
   }
 
   async findAllChaptersInStory(storyId: string): Promise<{

@@ -159,7 +159,7 @@ Authorization: Bearer {{jwtToken}}
 
 ### Get All story chapter with numbers
 # @name getChaptersByVolume
-GET {{baseUrl}}/chapter/story/08572c11-0c41-4f7d-851b-5be80e4584cf/all
+GET {{baseUrl}}/chapter/story/1a334963-22ad-4c25-af4c-a47d817d3d71/all
 Authorization: Bearer {{jwtToken}}
 
 ### Get Chapter by Id
@@ -190,6 +190,7 @@ Content-Type: application/json
 ### Delete Chapter
 DELETE {{baseUrl}}/chapter/f4bfea94-9845-434b-9b41-b20b78c71c78
 Authorization: Bearer {{jwtToken}}
+
 
 ### Create Announcement (Publisher)
 # @name createAnnouncement

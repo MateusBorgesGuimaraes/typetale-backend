@@ -1,6 +1,8 @@
 import { ResponseUserDto } from './../user/dto/response-user.dto';
 import {
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,12 +10,15 @@ import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Story, StoryStatus, StoryType } from './entities/story.entity';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { In, IsNull, Not, Repository, SelectQueryBuilder } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { createSlug } from 'src/common/utils/create-slug';
 import { StoryFilterDto } from './dto/story-filter.dto';
 import { UploadService } from 'src/upload/upload.service';
 import { Chapter } from 'src/chapter/entities/chapter.entity';
+import { ResponseStoryRankDto } from './dto/response-story-rank';
+import { ChapterService } from 'src/chapter/chapter.service';
+import { ResponseRecentlyUpdatedStoryDto } from './dto/response-story-recently-updated.dto';
 
 @Injectable()
 export class StoryService {
@@ -22,6 +27,8 @@ export class StoryService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Chapter)
     private readonly chapterRepository: Repository<Chapter>,
+    @Inject(forwardRef(() => ChapterService))
+    private readonly chapterService: ChapterService,
     private readonly uploadService: UploadService,
   ) {}
 
@@ -347,9 +354,21 @@ export class StoryService {
     });
 
     return {
-      topViewed,
-      topOngoing,
-      topCompleted,
+      topViewed: {
+        ...topViewed.map((story) => {
+          return new ResponseStoryRankDto(story);
+        }),
+      },
+      topOngoing: {
+        ...topOngoing.map((story) => {
+          return new ResponseStoryRankDto(story);
+        }),
+      },
+      topCompleted: {
+        ...topCompleted.map((story) => {
+          return new ResponseStoryRankDto(story);
+        }),
+      },
     };
   }
 
@@ -382,9 +401,21 @@ export class StoryService {
     });
 
     return {
-      topViewed,
-      topOngoing,
-      topCompleted,
+      topViewed: {
+        ...topViewed.map((story) => {
+          return new ResponseStoryRankDto(story);
+        }),
+      },
+      topOngoing: {
+        ...topOngoing.map((story) => {
+          return new ResponseStoryRankDto(story);
+        }),
+      },
+      topCompleted: {
+        ...topCompleted.map((story) => {
+          return new ResponseStoryRankDto(story);
+        }),
+      },
     };
   }
 
@@ -396,73 +427,11 @@ export class StoryService {
       .take(12)
       .getMany();
 
-    return stories;
-  }
-
-  async getRecentlyUpdated() {
-    const recentStoryIds = await this.storyRepository
-      .createQueryBuilder('story')
-      .leftJoin('story.volumes', 'volume')
-      .leftJoin('volume.chapters', 'chapter')
-      .where('chapter.isDraft = :isDraft', { isDraft: false })
-      .andWhere('chapter.publishedAt IS NOT NULL')
-      .orderBy('chapter.updatedAt', 'DESC')
-      .select('DISTINCT story.id', 'id')
-      .limit(7)
-      .getRawMany();
-
-    if (recentStoryIds.length === 0) {
-      throw new NotFoundException('Stories not found');
-    }
-
-    const ids = recentStoryIds.map((item) => item.id);
-
-    const stories = await this.storyRepository
-      .createQueryBuilder('story')
-      .leftJoinAndSelect('story.author', 'author')
-      .leftJoinAndSelect('story.volumes', 'volume')
-      .leftJoinAndSelect('volume.chapters', 'chapter')
-      .where('story.id IN (:...ids)', { ids })
-      .andWhere('chapter.isDraft = :isDraft', { isDraft: false })
-      .andWhere('chapter.publishedAt IS NOT NULL')
-      .getMany();
-
-    const storiesMap = new Map();
-
-    for (const story of stories) {
-      if (!storiesMap.has(story.id)) {
-        const latestChapter = story.volumes
-          .flatMap((volume) => volume.chapters)
-          .filter((chapter) => !chapter.isDraft && chapter.publishedAt)
-          .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())[0];
-
-        if (latestChapter) {
-          storiesMap.set(story.id, {
-            story: {
-              id: story.id,
-              title: story.title,
-              slug: story.slug,
-              coverUrl: story.coverUrl,
-              storyType: story.storyType,
-              mainGenre: story.mainGenre,
-              author: {
-                id: story.author.id,
-                username: story.author.username,
-              },
-            },
-            latestChapter: {
-              id: latestChapter.id,
-              title: latestChapter.title,
-              slug: latestChapter.slug,
-              updatedAt: latestChapter.updatedAt,
-              publishedAt: latestChapter.publishedAt,
-            },
-          });
-        }
-      }
-    }
-
-    return Array.from(storiesMap.values());
+    return {
+      randomStories: stories.map((story) => {
+        return new ResponseStoryRankDto(story);
+      }),
+    };
   }
 
   async getRecommendations(storyId: string) {
@@ -524,7 +493,32 @@ export class StoryService {
       recommendations.push(...additionalStories);
     }
 
-    return recommendations;
+    return {
+      recommendations: recommendations.map((story) => {
+        return new ResponseStoryRankDto(story);
+      }),
+    };
+  }
+
+  async getRecentlyUpdatedStories() {
+    const stories = await this.storyRepository
+      .createQueryBuilder('story')
+      .leftJoinAndSelect('story.author', 'author')
+      .leftJoinAndSelect('story.volumes', 'volume')
+      .leftJoinAndSelect('volume.chapters', 'chapter')
+      .where('chapter.isDraft = :isDraft', { isDraft: false })
+      .andWhere('chapter.publishedAt IS NOT NULL')
+      .orderBy('chapter.publishedAt', 'DESC')
+      .take(6)
+      .getMany();
+
+    const uniqueStories = Array.from(
+      new Map(stories.map((story) => [story.id, story])).values(),
+    ).slice(0, 6);
+
+    return uniqueStories.map(
+      (story) => new ResponseRecentlyUpdatedStoryDto(story),
+    );
   }
 
   async incrementChaptersCount(story: Story): Promise<void> {
