@@ -54,6 +54,12 @@ export class StoryController {
     };
   }
 
+  @Get('one/:id')
+  async findOneById(@Param('id') id: string) {
+    const story = await this.storyService.findOneById(id);
+    return new ResponseStoryDto(story);
+  }
+
   @Get(':slug')
   async findOne(@Param('slug') slug: string) {
     const story = await this.storyService.findOneBySlug(slug);

@@ -19,6 +19,56 @@ export class RatingService {
     @InjectRepository(Story) private storyRepository: Repository<Story>,
   ) {}
 
+  private calculateAverageRating(rating: Rating): number {
+    const {
+      writingQuality,
+      updateStability,
+      plotDevelopment,
+      charactersBuilding,
+      worldBuilding,
+    } = rating;
+
+    const total =
+      writingQuality +
+      updateStability +
+      plotDevelopment +
+      charactersBuilding +
+      worldBuilding;
+
+    return total / 5;
+  }
+
+  private async updateStoryRatingStats(
+    storyId: string,
+    manager?: EntityManager,
+  ) {
+    const ratingRepo = manager
+      ? manager.getRepository(Rating)
+      : this.ratingRepository;
+    const storyRepo = manager
+      ? manager.getRepository(Story)
+      : this.storyRepository;
+
+    const ratings = await ratingRepo.find({
+      where: { story: { id: storyId } },
+    });
+
+    const ratingCount = ratings.length;
+    let ratingAvg: number | undefined = undefined;
+
+    if (ratingCount > 0) {
+      const totalAvg = ratings.reduce((sum, rating) => {
+        return sum + this.calculateAverageRating(rating);
+      }, 0);
+      ratingAvg = totalAvg / ratingCount;
+    }
+
+    await storyRepo.update(storyId, {
+      ratingCount,
+      ratingAvg,
+    });
+  }
+
   async rateStory(
     storyId: string,
     userId: string,
@@ -40,6 +90,7 @@ export class RatingService {
 
     const story = await storyRepo.findOne({ where: { id: storyId } });
     if (!story) throw new NotFoundException('Story not found');
+
     const existingRating = await ratingRepo.findOne({
       where: {
         user: { id: userId },
@@ -59,7 +110,11 @@ export class RatingService {
       story,
     });
 
-    return ratingRepo.save(rating);
+    const savedRating = await ratingRepo.save(rating);
+
+    await this.updateStoryRatingStats(storyId, manager);
+
+    return savedRating;
   }
 
   async updateRating(
@@ -79,7 +134,11 @@ export class RatingService {
     }
 
     Object.assign(rating, updateRatingDto);
-    return this.ratingRepository.save(rating);
+    const updatedRating = await this.ratingRepository.save(rating);
+
+    await this.updateStoryRatingStats(storyId);
+
+    return updatedRating;
   }
 
   async getUserRating(storyId: string, userId: string) {
@@ -96,5 +155,24 @@ export class RatingService {
     }
 
     return rating;
+  }
+
+  async deleteRating(storyId: string, userId: string) {
+    const rating = await this.ratingRepository.findOne({
+      where: {
+        user: { id: userId },
+        story: { id: storyId },
+      },
+    });
+
+    if (!rating) {
+      throw new NotFoundException('Rating not found');
+    }
+
+    await this.ratingRepository.remove(rating);
+
+    await this.updateStoryRatingStats(storyId);
+
+    return { message: 'Rating deleted successfully' };
   }
 }
