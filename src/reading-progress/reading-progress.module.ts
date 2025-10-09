@@ -8,10 +8,11 @@ import { Chapter } from 'src/chapter/entities/chapter.entity';
 import { ReadingProgressController } from './reading-progress.controller';
 import { ReadingProgressService } from './reading-progress.service';
 import { ChapterModule } from 'src/chapter/chapter.module';
+import { Volume } from 'src/volume/entities/volume.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ReadingProgress, User, Story, Chapter]),
+    TypeOrmModule.forFeature([ReadingProgress, User, Story, Chapter, Volume]),
     ChapterModule,
   ],
   controllers: [ReadingProgressController],

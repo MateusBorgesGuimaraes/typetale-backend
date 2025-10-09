@@ -10,13 +10,44 @@ import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Chapter } from './entities/chapter.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Volume } from 'src/volume/entities/volume.entity';
 import { User } from 'src/user/entities/user.entity';
 import { createSlug } from 'src/common/utils/create-slug';
 import { FractionalIndexingHelper } from 'src/common/utils/fractional-indexing-helper';
 import { countWords } from 'src/common/utils/words-count';
 import { StoryService } from 'src/story/story.service';
+
+export interface ChapterWithNavigation {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  isDraft: boolean;
+  position: string;
+  publishedAt: Date | null;
+  wordsCount: number;
+  viewsCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+  volume: Volume;
+  visualPosition: number;
+  navigation: {
+    previous: {
+      id: string;
+      title: string;
+      slug: string;
+      volumeTitle: string;
+    } | null;
+    next: {
+      id: string;
+      title: string;
+      slug: string;
+      volumeTitle: string;
+    } | null;
+    totalChapters: number;
+  };
+}
 
 @Injectable()
 export class ChapterService {
@@ -248,7 +279,7 @@ export class ChapterService {
     };
   }
 
-  async findOneChapter(chapterId: string) {
+  async findOneChapter(chapterId: string): Promise<ChapterWithNavigation> {
     const chapter = await this.chapterRepository.findOne({
       where: { id: chapterId },
       relations: ['volume', 'volume.story'],
@@ -258,16 +289,181 @@ export class ChapterService {
       throw new NotFoundException('Chapter not found');
     }
 
-    const chaptersWithPosition = await this.addGlobalVisualPositions(
-      [chapter],
-      chapter.volume.story.id,
+    const result = await this.enrichChapterWithNavigation(chapter);
+
+    // Incrementar views de forma assíncrona (não bloqueia a resposta)
+    this.incrementViewCount(chapter).catch((error) => {
+      console.error('Error incrementing view count:', error);
+    });
+
+    return result;
+  }
+
+  async findChapterBySlug(chapterSlug: string): Promise<ChapterWithNavigation> {
+    const chapter = await this.chapterRepository.findOne({
+      where: { slug: chapterSlug },
+      relations: ['volume', 'volume.story'],
+    });
+
+    if (!chapter) {
+      throw new NotFoundException('Chapter not found');
+    }
+
+    const result = await this.enrichChapterWithNavigation(chapter);
+
+    // Incrementar views de forma assíncrona
+    this.incrementViewCount(chapter).catch((error) => {
+      console.error('Error incrementing view count:', error);
+    });
+
+    return result;
+  }
+
+  private async enrichChapterWithNavigation(
+    chapter: Chapter,
+  ): Promise<ChapterWithNavigation> {
+    const storyId = chapter.volume.story.id;
+
+    // Buscar todos os volumes da história ordenados
+    const volumes = await this.volumeRepository.find({
+      where: { story: { id: storyId } },
+      order: { createdAt: 'ASC' },
+    });
+
+    const volumeIds = volumes.map((v) => v.id);
+
+    // Buscar todos os capítulos publicados
+    const allChapters = await this.chapterRepository.find({
+      where: {
+        volume: { id: In(volumeIds) },
+        isDraft: false,
+      },
+      relations: ['volume'],
+      select: ['id', 'title', 'slug', 'position', 'volume'],
+    });
+
+    // Criar lista ordenada de capítulos
+    const orderedChapters: (Chapter & { volumeTitle: string })[] = [];
+    const volumeMap = new Map(volumes.map((v) => [v.id, v.title]));
+
+    for (const volume of volumes) {
+      const volumeChapters = allChapters
+        .filter((ch) => ch.volume.id === volume.id)
+        .sort((a, b) =>
+          FractionalIndexingHelper.compare(a.position, b.position),
+        )
+        .map((ch) => ({
+          ...ch,
+          volumeTitle: volumeMap.get(volume.id) || '',
+        }));
+      orderedChapters.push(...volumeChapters);
+    }
+
+    // Encontrar índice do capítulo atual
+    const currentIndex = orderedChapters.findIndex(
+      (ch) => ch.id === chapter.id,
     );
 
-    await this.incrementViewCount(chapter);
+    // Capítulo anterior
+    const previous =
+      currentIndex > 0
+        ? {
+            id: orderedChapters[currentIndex - 1].id,
+            title: orderedChapters[currentIndex - 1].title,
+            slug: orderedChapters[currentIndex - 1].slug,
+            volumeTitle: orderedChapters[currentIndex - 1].volumeTitle,
+          }
+        : null;
+
+    // Próximo capítulo
+    const next =
+      currentIndex < orderedChapters.length - 1
+        ? {
+            id: orderedChapters[currentIndex + 1].id,
+            title: orderedChapters[currentIndex + 1].title,
+            slug: orderedChapters[currentIndex + 1].slug,
+            volumeTitle: orderedChapters[currentIndex + 1].volumeTitle,
+          }
+        : null;
 
     return {
       ...chapter,
-      visualPosition: chaptersWithPosition[0]?.visualPosition || 1,
+      visualPosition: currentIndex + 1,
+      navigation: {
+        previous,
+        next,
+        totalChapters: orderedChapters.length,
+      },
+    };
+  }
+
+  async getChapterNavigation(chapterId: string): Promise<{
+    previous: { id: string; title: string; slug: string } | null;
+    next: { id: string; title: string; slug: string } | null;
+    current: { visualPosition: number; totalChapters: number };
+  }> {
+    const chapter = await this.chapterRepository.findOne({
+      where: { id: chapterId },
+      relations: ['volume', 'volume.story'],
+      select: ['id', 'position', 'volume'],
+    });
+
+    if (!chapter) {
+      throw new NotFoundException('Chapter not found');
+    }
+
+    const storyId = chapter.volume.story.id;
+
+    const volumes = await this.volumeRepository.find({
+      where: { story: { id: storyId } },
+      order: { createdAt: 'ASC' },
+      select: ['id', 'createdAt'],
+    });
+
+    const volumeIds = volumes.map((v) => v.id);
+
+    const allChapters = await this.chapterRepository.find({
+      where: {
+        volume: { id: In(volumeIds) },
+        isDraft: false,
+      },
+      relations: ['volume'],
+      select: ['id', 'title', 'slug', 'position', 'volume'],
+    });
+
+    const orderedChapters: Chapter[] = [];
+    for (const volume of volumes) {
+      const volumeChapters = allChapters
+        .filter((ch) => ch.volume.id === volume.id)
+        .sort((a, b) =>
+          FractionalIndexingHelper.compare(a.position, b.position),
+        );
+      orderedChapters.push(...volumeChapters);
+    }
+
+    const currentIndex = orderedChapters.findIndex((ch) => ch.id === chapterId);
+
+    return {
+      previous:
+        currentIndex > 0
+          ? {
+              id: orderedChapters[currentIndex - 1].id,
+              title: orderedChapters[currentIndex - 1].title,
+              slug: orderedChapters[currentIndex - 1].slug,
+            }
+          : null,
+      next:
+        currentIndex < orderedChapters.length - 1
+          ? {
+              id: orderedChapters[currentIndex + 1].id,
+              title: orderedChapters[currentIndex + 1].title,
+              slug: orderedChapters[currentIndex + 1].slug,
+            }
+          : null,
+      current: {
+        visualPosition: currentIndex + 1,
+        totalChapters: orderedChapters.length,
+      },
     };
   }
 
@@ -365,10 +561,12 @@ export class ChapterService {
   ): Promise<(T & { visualPosition: number })[]> {
     if (chapters.length === 0) return [];
 
+    // Se não tiver storyId, buscar do primeiro capítulo
     if (!storyId && chapters[0]?.volume) {
       const volume = await this.volumeRepository.findOne({
         where: { id: chapters[0].volume.id },
         relations: ['story'],
+        select: ['id', 'story'],
       });
       storyId = volume?.story?.id;
     }
@@ -377,38 +575,29 @@ export class ChapterService {
       throw new Error('Story ID is required to calculate global positions');
     }
 
+    // Buscar volumes ordenados
     const volumes = await this.volumeRepository.find({
       where: { story: { id: storyId } },
       order: { createdAt: 'ASC' },
       select: ['id', 'createdAt'],
     });
 
+    const volumeIds = volumes.map((v) => v.id);
+
+    // CORREÇÃO: Buscar apenas capítulos publicados com uma query
     const allChapters = await this.chapterRepository.find({
-      where: { volume: { story: { id: storyId } } },
+      where: {
+        volume: { id: In(volumeIds) },
+        isDraft: false,
+      },
       relations: ['volume'],
       select: ['id', 'position', 'volume'],
-      order: { position: 'ASC' },
     });
 
-    const chaptersByVolume = volumes.map((volume) => ({
-      volumeId: volume.id,
-      chapters: allChapters
-        .filter((chapter) => chapter.volume.id === volume.id)
-        .sort((a, b) =>
-          FractionalIndexingHelper.compare(a.position, b.position),
-        ),
-    }));
+    // Construir mapa de posições
+    const positionMap = this.buildPositionMap(volumes, allChapters);
 
-    let globalPosition = 1;
-    const positionMap = new Map<string, number>();
-
-    for (const volumeGroup of chaptersByVolume) {
-      for (const chapter of volumeGroup.chapters) {
-        positionMap.set(chapter.id, globalPosition);
-        globalPosition++;
-      }
-    }
-
+    // Mapear capítulos com suas posições
     return chapters.map((chapter) => ({
       ...chapter,
       visualPosition: positionMap.get(chapter.id) || 1,
@@ -429,8 +618,13 @@ export class ChapterService {
     }
 
     const storyId = chapter.volume.story.id;
+
+    // CORREÇÃO: Contar apenas capítulos publicados
     const totalChapters = await this.chapterRepository.count({
-      where: { volume: { story: { id: storyId } } },
+      where: {
+        volume: { story: { id: storyId } },
+        isDraft: false,
+      },
     });
 
     const chaptersWithPosition = await this.addGlobalVisualPositions(
@@ -442,6 +636,32 @@ export class ChapterService {
       visualPosition: chaptersWithPosition[0]?.visualPosition || 1,
       totalChapters,
     };
+  }
+
+  private buildPositionMap(
+    volumes: Volume[],
+    allChapters: Chapter[],
+  ): Map<string, number> {
+    const positionMap = new Map<string, number>();
+    let globalPosition = 1;
+
+    const chaptersByVolume = volumes.map((volume) => ({
+      volumeId: volume.id,
+      chapters: allChapters
+        .filter((chapter) => chapter.volume.id === volume.id)
+        .sort((a, b) =>
+          FractionalIndexingHelper.compare(a.position, b.position),
+        ),
+    }));
+
+    for (const volumeGroup of chaptersByVolume) {
+      for (const chapter of volumeGroup.chapters) {
+        positionMap.set(chapter.id, globalPosition);
+        globalPosition++;
+      }
+    }
+
+    return positionMap;
   }
 
   async addGlobalVisualPositionsWithStoryId<
@@ -458,31 +678,21 @@ export class ChapterService {
       select: ['id', 'createdAt'],
     });
 
+    const volumeIds = volumes.map((v) => v.id);
+
+    // Buscar capítulos publicados
     const allChapters = await this.chapterRepository.find({
-      where: { volume: { story: { id: storyId } } },
+      where: {
+        volume: { id: In(volumeIds) },
+        isDraft: false,
+      },
       relations: ['volume'],
       select: ['id', 'position', 'volume'],
     });
 
-    const chaptersByVolume = volumes.map((volume) => ({
-      volumeId: volume.id,
-      chapters: allChapters
-        .filter((chapter) => chapter.volume.id === volume.id)
-        .sort((a, b) =>
-          FractionalIndexingHelper.compare(a.position, b.position),
-        ),
-    }));
+    const positionMap = this.buildPositionMap(volumes, allChapters);
 
-    let globalPosition = 1;
-    const positionMap = new Map<string, number>();
-
-    for (const volumeGroup of chaptersByVolume) {
-      for (const chapter of volumeGroup.chapters) {
-        positionMap.set(chapter.id, globalPosition);
-        globalPosition++;
-      }
-    }
-
+    // Ordenar os capítulos de entrada por position
     const sortedChapters = [...chapters].sort((a, b) =>
       FractionalIndexingHelper.compare(a.position, b.position),
     );
@@ -503,22 +713,29 @@ export class ChapterService {
       throw new NotFoundException('Chapter not found');
     }
 
-    const allChapters = await this.chapterRepository.find({
-      where: { volume: { story: { id: chapter.volume.story.id } } },
-      relations: ['volume'],
-      order: { position: 'ASC' },
+    const storyId = chapter.volume.story.id;
+
+    // CORREÇÃO: Buscar apenas uma vez
+    const volumes = await this.volumeRepository.find({
+      where: { story: { id: storyId } },
+      order: { createdAt: 'ASC' },
+      select: ['id', 'createdAt'],
     });
 
-    const chaptersWithPosition = await this.addGlobalVisualPositionsWithStoryId(
-      allChapters,
-      chapter.volume.story.id,
-    );
+    const volumeIds = volumes.map((v) => v.id);
 
-    const chapterWithPosition = chaptersWithPosition.find(
-      (ch) => ch.id === chapterId,
-    );
+    const allChapters = await this.chapterRepository.find({
+      where: {
+        volume: { id: In(volumeIds) },
+        isDraft: false,
+      },
+      relations: ['volume'],
+      select: ['id', 'position', 'volume'],
+    });
 
-    return chapterWithPosition?.visualPosition || 1;
+    const positionMap = this.buildPositionMap(volumes, allChapters);
+
+    return positionMap.get(chapterId) || 1;
   }
 
   async findAllChaptersInStory(storyId: string): Promise<{
@@ -538,19 +755,30 @@ export class ChapterService {
       order: { createdAt: 'ASC' },
     });
 
+    const volumeIds = volumes.map((v) => v.id);
+
+    // Buscar todos os capítulos de uma vez
     const allChapters = await this.chapterRepository.find({
-      where: { volume: { story: { id: storyId } } },
+      where: {
+        volume: { id: In(volumeIds) },
+        isDraft: false,
+      },
       relations: ['volume'],
-      order: { position: 'ASC' },
     });
 
-    const chaptersWithGlobalPosition =
-      await this.addGlobalVisualPositionsWithStoryId(allChapters, storyId);
+    const positionMap = this.buildPositionMap(volumes, allChapters);
 
+    // Adicionar visualPosition aos capítulos
+    const chaptersWithPosition = allChapters.map((chapter) => ({
+      ...chapter,
+      visualPosition: positionMap.get(chapter.id) || 1,
+    }));
+
+    // Agrupar por volume
     const volumesWithChapters = volumes.map((volume) => {
-      const volumeChapters = chaptersWithGlobalPosition.filter(
-        (chapter) => chapter.volume.id === volume.id,
-      );
+      const volumeChapters = chaptersWithPosition
+        .filter((chapter) => chapter.volume.id === volume.id)
+        .sort((a, b) => a.visualPosition - b.visualPosition);
 
       return {
         volume: {
@@ -558,6 +786,7 @@ export class ChapterService {
           title: volume.title,
           description: volume.description,
           createdAt: volume.createdAt,
+          chaptersCount: volumeChapters.length,
         },
         chapters: volumeChapters,
       };
@@ -568,6 +797,7 @@ export class ChapterService {
         id: story.id,
         title: story.title,
         synopsis: story.synopsis,
+        chaptersCount: chaptersWithPosition.length,
       },
       volumes: volumesWithChapters,
     };

@@ -17,6 +17,7 @@ import type { AuthenticatedRequest } from 'src/auth/types/authenticated-request'
 import { ResponseChapterDto } from './dto/response-chapter.dto';
 import { ReorderChapterDto } from './dto/reorder-chapter.dto';
 import { SimpleResponseChapterDto } from './dto/simple-response-chapter.dto';
+import { ResponseChapterWithStoryDto } from './dto/response-chapter-with-navigation.dto';
 
 @Controller('chapter')
 export class ChapterController {
@@ -84,7 +85,13 @@ export class ChapterController {
   @Get(':id')
   async findOneChapter(@Param('id') id: string) {
     const chapter = await this.chapterService.findOneChapter(id);
-    return new ResponseChapterDto(chapter);
+    return new ResponseChapterWithStoryDto(chapter);
+  }
+
+  @Get('slug/:slug')
+  async findOneChapterBySlug(@Param('slug') slug: string) {
+    const chapter = await this.chapterService.findChapterBySlug(slug);
+    return new ResponseChapterWithStoryDto(chapter);
   }
 
   @UseGuards(JwtAuthGuard)
