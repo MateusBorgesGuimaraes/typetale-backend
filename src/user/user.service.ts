@@ -51,6 +51,7 @@ export class UserService {
 
     try {
       const created = await this.userRepository.save(newUser);
+
       return created;
     } catch (error) {
       if (createUserDto.avatarUrl) {
@@ -60,11 +61,15 @@ export class UserService {
     }
   }
 
-  findByEmail(email: string) {
-    return this.userRepository.findOneBy({ email });
+  async findByEmailOrFail(email: string): Promise<User> {
+    const user = await this.userRepository.findOneBy({ email });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return user;
   }
 
-  async findById(id: string) {
+  async findByIdOrFail(id: string) {
     const user = await this.userRepository.findOneBy({ id });
 
     if (!user) {

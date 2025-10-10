@@ -8,6 +8,7 @@ export class ResponseVolumeDto {
   readonly description?: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
+  readonly author?: { id: string; username: string; avatarUrl?: string };
   readonly story?: { id: string; title: string; coverUrl?: string };
   readonly chapters?: {
     id: string;
@@ -22,6 +23,13 @@ export class ResponseVolumeDto {
     this.description = volume.description;
     this.createdAt = volume.createdAt;
     this.updatedAt = volume.updatedAt;
+    if (volume.story?.author) {
+      this.author = {
+        id: volume.story.author.id,
+        username: volume.story.author.username,
+        avatarUrl: volume.story.author.avatarUrl,
+      };
+    }
     if (volume.story) {
       this.story = {
         id: volume.story.id,

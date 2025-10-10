@@ -13,7 +13,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
   async login(loginDto: LoginDto) {
-    const user = await this.userService.findByEmail(loginDto.email);
+    const user = await this.userService.findByEmailOrFail(loginDto.email);
     const error = new UnauthorizedException('Invalid email or password');
 
     if (!user) {

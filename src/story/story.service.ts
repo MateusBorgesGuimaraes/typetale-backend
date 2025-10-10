@@ -10,7 +10,7 @@ import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Story, StoryStatus, StoryType } from './entities/story.entity';
-import { In, IsNull, Not, Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { createSlug } from 'src/common/utils/create-slug';
 import { StoryFilterDto } from './dto/story-filter.dto';
@@ -19,6 +19,7 @@ import { Chapter } from 'src/chapter/entities/chapter.entity';
 import { ResponseStoryRankDto } from './dto/response-story-rank';
 import { ChapterService } from 'src/chapter/chapter.service';
 import { ResponseRecentlyUpdatedStoryDto } from './dto/response-story-recently-updated.dto';
+import { error } from 'console';
 
 @Injectable()
 export class StoryService {
@@ -40,39 +41,38 @@ export class StoryService {
       throw new NotFoundException('User not found');
     }
 
-    const post = this.storyRepository.create({
+    const newStory = this.storyRepository.create({
       ...createStoryDto,
       slug: createSlug(createStoryDto.title),
       author: user,
     });
 
     try {
-      return this.storyRepository.save(post);
+      const createdStory = await this.storyRepository.manager.transaction(
+        async (manager) => {
+          return await manager.save(Story, newStory);
+        },
+      );
+
+      return createdStory;
     } catch (error) {
       await this.uploadService.deleteImageFromUrl(createStoryDto.coverUrl);
       throw error;
     }
   }
 
-  async findOneBySlug(slug: string) {
+  async findOne(identifier: string) {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        identifier,
+      );
+
+    const whereCondition = isUuid ? { id: identifier } : { slug: identifier };
+
     const story = await this.storyRepository.findOne({
-      where: { slug },
-      relations: {
-        author: true,
-      },
+      where: whereCondition,
+      relations: { author: true },
     });
-
-    if (!story) {
-      throw new NotFoundException('Story not found');
-    }
-
-    await this.incrementViewsCount(story);
-
-    return story;
-  }
-
-  async findOneById(id: string) {
-    const story = await this.storyRepository.findOneBy({ id });
 
     if (!story) {
       throw new NotFoundException('Story not found');
@@ -84,22 +84,18 @@ export class StoryService {
   }
 
   async findAllUserStories(authorId: string) {
-    const author = await this.userRepository.findOneBy({ id: authorId });
-    if (!author) {
-      throw new NotFoundException('User not found');
-    }
-
     const stories = await this.storyRepository.find({
       where: { author: { id: authorId } },
+      relations: ['author'],
     });
 
-    if (!stories) {
+    if (stories.length === 0 || !stories) {
       throw new NotFoundException('Stories not found');
     }
 
     return {
       stories,
-      author: new ResponseUserDto(author),
+      author: new ResponseUserDto(stories[0].author),
     };
   }
 
@@ -112,13 +108,15 @@ export class StoryService {
 
     this.applySorting(queryBuilder, filterDto.sortBy, filterDto.sortOrder);
 
-    const offset = (filterDto.page - 1) * filterDto.limit;
+    const page = Math.max(1, filterDto.page || 1);
+    const limit = filterDto.limit || 10;
+    const offset = (page - 1) * limit;
     const [data, total] = await queryBuilder
       .skip(offset)
       .take(filterDto.limit)
       .getManyAndCount();
 
-    if (!data) {
+    if (data.length === 0 || !data) {
       throw new NotFoundException('Stories not found');
     }
 
@@ -126,8 +124,8 @@ export class StoryService {
       data,
       meta: {
         total,
-        page: filterDto.page,
-        limit: filterDto.limit,
+        page: page,
+        limit: limit,
         totalPages: Math.ceil(total / filterDto.limit),
         hasNextPage: filterDto.page < Math.ceil(total / filterDto.limit),
         hasPreviousPage: filterDto.page > 1,
@@ -142,22 +140,15 @@ export class StoryService {
   ) {
     const story = await this.storyRepository.findOne({
       where: { id },
-      relations: {
-        author: true,
-      },
+      relations: { author: true },
     });
 
-    if (!story) {
-      throw new NotFoundException('Story not found');
-    }
+    if (!story) throw new NotFoundException('Story not found');
 
-    if (authorId !== story.author.id) {
+    if (authorId !== story.author.id)
       throw new ForbiddenException('You are not allowed to update this story');
-    }
 
-    if (updateStoryDto.coverUrl !== story.coverUrl) {
-      await this.uploadService.deleteImageFromUrl(story.coverUrl);
-    }
+    const oldCoverUrl = story.coverUrl;
 
     const potentialUpdates = {
       title: updateStoryDto.title,
@@ -174,29 +165,32 @@ export class StoryService {
     };
 
     const updatedData: Record<string, any> = {};
-
     for (const [key, value] of Object.entries(potentialUpdates)) {
       if (value !== undefined && (story as any)[key] !== value) {
         updatedData[key] = value;
       }
     }
 
-    if (Object.keys(updatedData).length === 0) {
-      return story;
-    }
+    if (Object.keys(updatedData).length === 0) return story;
 
-    await this.storyRepository.update(id, updatedData);
+    await this.storyRepository.manager.transaction(async (manager) => {
+      await manager.update(Story, id, updatedData);
+    });
+
+    if (updateStoryDto.coverUrl && updateStoryDto.coverUrl !== oldCoverUrl) {
+      try {
+        await this.uploadService.deleteImageFromUrl(oldCoverUrl);
+      } catch (err) {
+        console.error('⚠️ Failed to delete image:', err.message);
+      }
+    }
 
     const updatedStory = await this.storyRepository.findOne({
       where: { id },
       relations: { author: true },
     });
 
-    if (!updatedStory) {
-      throw new NotFoundException('Story not found');
-    }
-
-    return updatedStory;
+    return updatedStory!;
   }
 
   async deleteById(id: string, authorId: string) {
@@ -213,13 +207,24 @@ export class StoryService {
       throw new ForbiddenException('You are not allowed to delete this story');
     }
 
-    await this.uploadService.deleteImageFromUrl(story.coverUrl);
+    const coverUrlToDelete = story.coverUrl;
 
-    await this.storyRepository.delete(id);
+    try {
+      await this.storyRepository.manager.transaction(async (manager) => {
+        await manager.delete(Story, { id });
+      });
 
-    return {
-      message: 'Story deleted successfully',
-    };
+      if (coverUrlToDelete) {
+        try {
+          await this.uploadService.deleteImageFromUrl(coverUrlToDelete);
+        } catch (err) {
+          console.error('⚠️ Failed to delete image:', err.message);
+        }
+      }
+      return { message: 'Story deleted successfully' };
+    } catch (error) {
+      throw error;
+    }
   }
 
   private applyFilters(
@@ -325,97 +330,32 @@ export class StoryService {
     queryBuilder.addOrderBy('story.id', 'ASC');
   }
 
-  async getTopFanfics() {
-    const topViewed = await this.storyRepository.find({
-      where: { storyType: StoryType.FANFIC },
+  async getTopStoriesByType(storyType: StoryType) {
+    const statuses = [StoryStatus.ONGOING, StoryStatus.COMPLETED];
+    const base = await this.storyRepository.find({
+      where: { storyType },
       order: { viewsCount: 'DESC' },
       take: 5,
       relations: ['author'],
     });
 
-    const topOngoing = await this.storyRepository.find({
-      where: {
-        storyType: StoryType.FANFIC,
-        status: StoryStatus.ONGOING,
-      },
-      order: { viewsCount: 'DESC' },
-      take: 5,
-      relations: ['author'],
-    });
+    const categorized = await Promise.all(
+      statuses.map(async (status) =>
+        this.storyRepository.find({
+          where: { storyType, status },
+          order: { viewsCount: 'DESC' },
+          take: 5,
+          relations: ['author'],
+        }),
+      ),
+    );
 
-    const topCompleted = await this.storyRepository.find({
-      where: {
-        storyType: StoryType.FANFIC,
-        status: StoryStatus.COMPLETED,
-      },
-      order: { viewsCount: 'DESC' },
-      take: 5,
-      relations: ['author'],
-    });
+    const [ongoing, completed] = categorized;
 
     return {
-      topViewed: {
-        ...topViewed.map((story) => {
-          return new ResponseStoryRankDto(story);
-        }),
-      },
-      topOngoing: {
-        ...topOngoing.map((story) => {
-          return new ResponseStoryRankDto(story);
-        }),
-      },
-      topCompleted: {
-        ...topCompleted.map((story) => {
-          return new ResponseStoryRankDto(story);
-        }),
-      },
-    };
-  }
-
-  async getTopOriginals() {
-    const topViewed = await this.storyRepository.find({
-      where: { storyType: StoryType.ORIGINAL },
-      order: { viewsCount: 'DESC' },
-      take: 5,
-      relations: ['author'],
-    });
-
-    const topOngoing = await this.storyRepository.find({
-      where: {
-        storyType: StoryType.ORIGINAL,
-        status: StoryStatus.ONGOING,
-      },
-      order: { viewsCount: 'DESC' },
-      take: 5,
-      relations: ['author'],
-    });
-
-    const topCompleted = await this.storyRepository.find({
-      where: {
-        storyType: StoryType.ORIGINAL,
-        status: StoryStatus.COMPLETED,
-      },
-      order: { viewsCount: 'DESC' },
-      take: 5,
-      relations: ['author'],
-    });
-
-    return {
-      topViewed: {
-        ...topViewed.map((story) => {
-          return new ResponseStoryRankDto(story);
-        }),
-      },
-      topOngoing: {
-        ...topOngoing.map((story) => {
-          return new ResponseStoryRankDto(story);
-        }),
-      },
-      topCompleted: {
-        ...topCompleted.map((story) => {
-          return new ResponseStoryRankDto(story);
-        }),
-      },
+      topViewed: base.map((s) => new ResponseStoryRankDto(s)),
+      topOngoing: ongoing.map((s) => new ResponseStoryRankDto(s)),
+      topCompleted: completed.map((s) => new ResponseStoryRankDto(s)),
     };
   }
 
@@ -565,7 +505,6 @@ export class StoryService {
   }
 
   async incrementViewsCount(story: Story): Promise<void> {
-    story.viewsCount += 1;
-    await this.storyRepository.save(story);
+    await this.storyRepository.increment({ id: story.id }, 'viewsCount', 1);
   }
 }

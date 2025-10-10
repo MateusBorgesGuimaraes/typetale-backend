@@ -15,7 +15,6 @@ export class LibraryEntry {
   @ManyToOne(() => Story, { eager: true, onDelete: 'CASCADE' })
   story: Story;
 
-  // Relacionamento opcional para progresso de leitura
   @ManyToOne(() => ReadingProgress, {
     eager: true,
     nullable: true,

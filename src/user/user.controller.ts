@@ -6,14 +6,14 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from 'src/auth/types/authenticated-request';
 import { ResponseUserDto } from './dto/response-user.dto';
 
-@Controller('user')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Get('profile')
+  @Get('me')
   async findOne(@Req() req: AuthenticatedRequest) {
-    const user = await this.userService.findById(req.user.id);
+    const user = await this.userService.findByIdOrFail(req.user.id);
     return new ResponseUserDto(user);
   }
 

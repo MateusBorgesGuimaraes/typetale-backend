@@ -10,5 +10,6 @@ import { User } from 'src/user/entities/user.entity';
   imports: [TypeOrmModule.forFeature([Volume, Story, User])],
   controllers: [VolumeController],
   providers: [VolumeService],
+  exports: [VolumeService],
 })
 export class VolumeModule {}

@@ -10,7 +10,6 @@ import { Repository } from 'typeorm';
 import { Volume } from './entities/volume.entity';
 import { CreateVolumeDto } from './dto/create-volume.dto';
 import { UpdateVolumeDto } from './dto/update-volume.dto';
-import { title } from 'process';
 
 @Injectable()
 export class VolumeService {
@@ -21,7 +20,7 @@ export class VolumeService {
     private readonly volumeRepository: Repository<Volume>,
   ) {}
 
-  async createVolume(
+  async create(
     storyId: string,
     authorId: string,
     createVolumeDto: CreateVolumeDto,
@@ -53,7 +52,7 @@ export class VolumeService {
     return this.volumeRepository.save(volume);
   }
 
-  async findAllVolumes(storyId: string) {
+  async findAllByStoryId(storyId: string) {
     const volumes = await this.volumeRepository.find({
       where: { story: { id: storyId } },
       order: { createdAt: 'ASC' },
@@ -64,7 +63,7 @@ export class VolumeService {
   async findOneVolume(volumeId: string) {
     const volume = await this.volumeRepository.findOne({
       where: { id: volumeId },
-      relations: ['story'],
+      relations: ['story', 'story.author', 'chapters'],
     });
 
     if (!volume) {
@@ -101,7 +100,7 @@ export class VolumeService {
 
     await this.volumeRepository.save(volume);
 
-    return volume;
+    return this.findOneVolume(volume.id);
   }
 
   async removeVolume(volumeId: string, userId: string) {
@@ -109,15 +108,21 @@ export class VolumeService {
       where: { id: volumeId },
       relations: ['story', 'story.author'],
     });
+
     if (!volume) {
       throw new NotFoundException('Volume not found');
     }
+
     if (!volume.story) {
       throw new NotFoundException('Story not found');
     }
+
     if (volume.story.author.id !== userId) {
       throw new ForbiddenException('You are not the author of this story');
     }
+
     await this.volumeRepository.remove(volume);
+
+    return { message: 'Volume deleted successfully' };
   }
 }

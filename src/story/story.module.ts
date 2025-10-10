@@ -7,11 +7,13 @@ import { User } from 'src/user/entities/user.entity';
 import { UploadModule } from 'src/upload/upload.module';
 import { ChapterModule } from 'src/chapter/chapter.module';
 import { Chapter } from 'src/chapter/entities/chapter.entity';
+import { VolumeModule } from 'src/volume/volume.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Story, User, Chapter]),
     UploadModule,
+    forwardRef(() => VolumeModule),
     forwardRef(() => ChapterModule),
   ],
   controllers: [StoryController],

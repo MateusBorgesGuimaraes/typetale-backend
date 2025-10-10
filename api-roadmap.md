@@ -11,32 +11,39 @@
 
 ### 👤 User
 
-- [x] `POST /user` → criar usuário
-- [x] `GET /user/profile` → buscar perfil logado
+- [x] `POST /users` → criar usuário
+- [x] `GET /users/me` → buscar perfil logado
 
 ---
 
 ### 📖 Story
 
 - [x] `POST /story` → criar história
-- [x] `GET /story/:slug` → buscar história por slug
+- [x] `GET /story/:uuidOrSlug` → buscar história por slug ou uuid
 - [x] `PATCH /story/:id` → editar história
 - [x] `DELETE /story/:id` → deletar história
 - [x] `GET /story/me` → buscar histórias do usuario
 - [x] `GET /story` → lista com filtros, ordenação e paginação
-- [ ] `GET /story/:id/recommendations` → recomendações de histórias
-- [ ] `GET /story/rankings` → rankings
-- [ ] `GET /story/editor-picks` → escolhas do editor
-- [ ] `GET /story/latest-updates` → últimas atualizações
+- [x] `GET /random` → lista com historias aleatorias
+- [x] `GET /story/top?type=original` → rankings historias originais
+- [x] `GET /story/top?type=fanfic` → rankings historias fanfics
+- [x] `GET /story/:id/recommendations` → recomendações de histórias
+- [x] `GET /story/recently-updated` → últimas atualizações
+
+---
+
+### 📖 Story && 📚 Volumes
+
+- [x] `POST /story/:storyId/volumes` → criar volume na historia
+- [x] `GET /story/:storyId/volumes` → buscar volumes na historia
 
 ---
 
 ### 📚 Volume
 
-- [x] `POST /volume/create/:storyId` → criar volume
-- [x] `GET /volume/all/:storyId` → buscar todos os volumes da historia
-- [ ] `PATCH /volume/:volumeId` → editar volume
-- [ ] `DELETE /volume/:volumeId` → deletar capítulo
+- [x] `PATCH /volume/:volumeId` → editar volume
+- [x] `GET /volume/:volumeId` → buscar um volume
+- [x] `DELETE /volume/:volumeId` → deletar volume
 
 ---
 

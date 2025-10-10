@@ -291,10 +291,15 @@ export class ChapterService {
 
     const result = await this.enrichChapterWithNavigation(chapter);
 
-    // Incrementar views de forma assíncrona (não bloqueia a resposta)
     this.incrementViewCount(chapter).catch((error) => {
       console.error('Error incrementing view count:', error);
     });
+
+    await this.storyService
+      .incrementViewsCount(chapter.volume.story)
+      .catch((error) => {
+        console.error('Error incrementing view count:', error);
+      });
 
     return result;
   }
@@ -311,10 +316,15 @@ export class ChapterService {
 
     const result = await this.enrichChapterWithNavigation(chapter);
 
-    // Incrementar views de forma assíncrona
     this.incrementViewCount(chapter).catch((error) => {
       console.error('Error incrementing view count:', error);
     });
+
+    await this.storyService
+      .incrementViewsCount(chapter.volume.story)
+      .catch((error) => {
+        console.error('Error incrementing view count:', error);
+      });
 
     return result;
   }
@@ -324,7 +334,6 @@ export class ChapterService {
   ): Promise<ChapterWithNavigation> {
     const storyId = chapter.volume.story.id;
 
-    // Buscar todos os volumes da história ordenados
     const volumes = await this.volumeRepository.find({
       where: { story: { id: storyId } },
       order: { createdAt: 'ASC' },
@@ -481,9 +490,11 @@ export class ChapterService {
       where: { id: chapterId },
       relations: ['volume', 'volume.story', 'volume.story.author'],
     });
+
     if (!chapter) {
       throw new NotFoundException('Chapter not found');
     }
+
     if (chapter.volume.story.author.id !== authorId) {
       throw new ForbiddenException('You are not the author of this story');
     }

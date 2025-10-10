@@ -15,25 +15,25 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "writer2@email.com",
+  "email": "writer1@email.com",
   "password": "123456"
 }
 
 ### Create user
 # @name createUser
-POST {{baseUrl}}/user
+POST {{baseUrl}}/users
 Content-Type: application/json
 
 {
-  "username": "writer2",
-  "email": "writer2@email.com",
+  "username": "user2",
+  "email": "user2@gmail.com",
   "password": "123456",
   "avatarUrl": "/uploads/avatars/2025-10-04/1759610847416-2qzg4r.jpg"
 }
 
 ### Get one user
 # @name getUserByToken
-GET {{baseUrl}}/user/profile
+GET {{baseUrl}}/users/me
 Authorization: Bearer {{jwtToken}}
 
 ### Create Story
@@ -53,9 +53,9 @@ Content-Type: application/json
     "status": "COMPLETED"
   }
 
-### Find One Story by slug
-# @name findStoryBySlug
-GET {{baseUrl}}/story/The-fire-sword-a1mxd6
+### Find One Story by Id or Slug
+# @name findStoryByIdOrSlug
+GET {{baseUrl}}/story/7b7a44a6-385d-4dbd-b224-d871de740a7b
 
 ### Find All Stories with pagination and filtering
 # @name findAllStoriesPaginatedAndFiltered
@@ -63,7 +63,7 @@ GET {{baseUrl}}/story?page=1&limit=2&storyType=original&&sortOrder=ASC
 
 ### Find All Stories with pagination
 # @name findAllStoriesPaginated
-GET {{baseUrl}}/story?page=1&limit=2
+GET {{baseUrl}}/story?page=1&limit=8
 
 ### Update Story
 # @name updateStory
@@ -85,13 +85,9 @@ Authorization: Bearer {{jwtToken}}
 GET {{baseUrl}}/story/me
 Authorization: Bearer {{jwtToken}}
 
-### Get Top Fanfics story
-# @name getTopFanfics
-GET {{baseUrl}}/story/top/fanfics
-
-### Get Top Originals story
-# @name getTopOriginals
-GET {{baseUrl}}/story/top/originals
+### Get Top Fanfics or Original story
+# @name getTopFanficsOrOriginal
+GET {{baseUrl}}/story/top?type=fanfic
 
 ### Get random
 # @name getRandom
@@ -107,22 +103,22 @@ GET {{baseUrl}}/story/recently-updated
 
 ### Create Volume
 # @name createVolume
-POST {{baseUrl}}/volume/create/1a334963-22ad-4c25-af4c-a47d817d3d71
+POST {{baseUrl}}/story/08572c11-0c41-4f7d-851b-5be80e4584cf/volumes
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "title": "Volume 1",
-  "description": "Here is the description of volume 1"
+  "title": "Volume 2",
+  "description": "Neon Requiem volume 2"
 }
 
 ### Update Volume
-PATCH  {{baseUrl}}/volume/fde43722-2a18-44e4-b26d-900d10949f9c
+PATCH  {{baseUrl}}/volume/1c450148-f7c0-44d6-8ccf-c4bf208a06ce
 Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "description": "Here is the description of volume 1"
+  "description": "Here is the description of volume 2 updated"
 }
 
 ### Get Volume by Id
@@ -132,7 +128,7 @@ Authorization: Bearer {{jwtToken}}
 
 ### Get Volumes by Story
 # @name getVolumesByStory
-GET {{baseUrl}}/volume/all/25d8d2f0-a3e6-4ae4-b385-0be9f67d51d5
+GET {{baseUrl}}/volume/08572c11-0c41-4f7d-851b-5be80e4584cf/volumes
 Authorization: Bearer {{jwtToken}}
 
 ### Delete Volume
@@ -164,7 +160,12 @@ Authorization: Bearer {{jwtToken}}
 
 ### Get Chapter by Id
 # @name getChapterById
-GET {{baseUrl}}/chapter/123acb61-cabd-4465-943e-3f75647f8b1e
+GET {{baseUrl}}/chapter/bd1e58a3-9c75-4683-b7e4-876397d0ae84
+Authorization: Bearer {{jwtToken}}
+
+### Get Chapter by Slug
+# @name getChapterBySlug
+GET {{baseUrl}}/chapter/slug/digital-soule-324-mlf7qv
 Authorization: Bearer {{jwtToken}}
 
 ### Reorder chapter
@@ -176,7 +177,6 @@ Content-Type: application/json
   "beforeChapterId": "089be7fd-9c39-479c-80dd-5196303d1f12",
   "afterChapterId": "75b8492f-2c70-42a4-865e-8569629717fb"
 }
-
 
 ### Update Chapter
 PATCH {{baseUrl}}/chapter/546d5f5a-c81a-40d8-a7b2-d816c1fbf666
@@ -287,8 +287,8 @@ Content-Type: application/json
 Authorization: Bearer {{jwtToken}}
 
 {
-  "storyId": "25d8d2f0-a3e6-4ae4-b385-0be9f67d51d5",
-  "chapterId": "1d87db20-40e6-4611-bd39-44c7937a2b96",
+  "storyId": "1a334963-22ad-4c25-af4c-a47d817d3d71",
+  "chapterId": "bd1e58a3-9c75-4683-b7e4-876397d0ae84",
   "force": true
 }
 
@@ -299,7 +299,7 @@ Content-Type: application/json
 Authorization: Bearer {{jwtToken}}
 
 {
-  "storyId": "25d8d2f0-a3e6-4ae4-b385-0be9f67d51d5"
+  "storyId": "7b7a44a6-385d-4dbd-b224-d871de740a7b"
 }
 
 ### Remover história da library
@@ -334,15 +334,15 @@ Authorization: Bearer {{jwtToken}}
 Content-Type: application/json
 
 {
-  "body": "Show de bola a historia!",
+  "body": "bonzin",
   "targetType": "story",
-  "targetId": "55dd6b42-a0c7-4619-8318-cff950711f73",
+  "targetId": "7b7a44a6-385d-4dbd-b224-d871de740a7b",
   "rating": {
-    "writingQuality": 5,
+    "writingQuality": 4,
     "updateStability": 4,
     "plotDevelopment": 4,
     "charactersBuilding": 4,
-    "worldBuilding": 5
+    "worldBuilding": 3
   }
 }
 
@@ -372,7 +372,7 @@ Content-Type: application/json
 
 ### get target comments
 # @name getTargetWithComments
-GET {{baseUrl}}/comment/story/55dd6b42-a0c7-4619-8318-cff950711f73
+GET {{baseUrl}}/comment/story/7b7a44a6-385d-4dbd-b224-d871de740a7b
 Authorization: Bearer {{jwtToken}}
 
 ### update comment by id

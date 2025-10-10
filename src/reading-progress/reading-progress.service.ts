@@ -36,19 +36,16 @@ export class ReadingProgressService {
 
   async updateProgress(dto: UpdateReadingProgressDto, userId: string) {
     try {
-      // Verificar usuário
       const user = await this.userRepository.findOneBy({ id: userId });
       if (!user) {
         throw new NotFoundException('User not found');
       }
 
-      // Verificar história
       const story = await this.storyRepository.findOneBy({ id: dto.storyId });
       if (!story) {
         throw new NotFoundException('Story not found');
       }
 
-      // Verificar que o capítulo pertence à história E não é rascunho
       const chapter = await this.chapterRepository.findOne({
         where: {
           id: dto.chapterId,
@@ -64,13 +61,11 @@ export class ReadingProgressService {
         );
       }
 
-      // Buscar progresso existente
       let progress = await this.progressRepository.findOne({
         where: { user: { id: user.id }, story: { id: story.id } },
         relations: ['chapter', 'chapter.volume'],
       });
 
-      // Se não existe progresso, criar novo
       if (!progress) {
         progress = this.progressRepository.create({ user, story, chapter });
         await this.progressRepository.save(progress);
@@ -80,7 +75,6 @@ export class ReadingProgressService {
         };
       }
 
-      // Se force=true, atualizar direto
       if (dto.force) {
         progress.chapter = chapter;
         await this.progressRepository.save(progress);
@@ -90,7 +84,6 @@ export class ReadingProgressService {
         };
       }
 
-      // Verificar se é o próximo capítulo sequencial
       const isSequential = await this.isNextChapter(
         progress.chapter,
         chapter,

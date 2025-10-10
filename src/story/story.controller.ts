@@ -16,12 +16,18 @@ import { UpdateStoryDto } from './dto/update-story.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from 'src/auth/types/authenticated-request';
 import { ResponseStoryDto } from './dto/response-story.dto';
-import { ResponseStoryDetailsDto } from './dto/resonse-story-details.dto';
 import { StoryFilterDto } from './dto/story-filter.dto';
+import { StoryType } from './entities/story.entity';
+import { CreateVolumeDto } from 'src/volume/dto/create-volume.dto';
+import { ResponseVolumeDto } from 'src/volume/dto/response-volume.dto';
+import { VolumeService } from 'src/volume/volume.service';
 
 @Controller('story')
 export class StoryController {
-  constructor(private readonly storyService: StoryService) {}
+  constructor(
+    private readonly storyService: StoryService,
+    private readonly volumeService: VolumeService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -31,6 +37,27 @@ export class StoryController {
   ) {
     const story = await this.storyService.create(req.user.id, createStoryDto);
     return new ResponseStoryDto(story);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/:storyId/volumes')
+  async createVolume(
+    @Param('storyId') storyId: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() createVolumeDto: CreateVolumeDto,
+  ) {
+    const volume = await this.volumeService.create(
+      storyId,
+      req.user.id,
+      createVolumeDto,
+    );
+    return new ResponseVolumeDto(volume);
+  }
+
+  @Get('/:storyId/volumes')
+  async findAllVolumes(@Param('storyId') storyId: string) {
+    const volumes = await this.volumeService.findAllByStoryId(storyId);
+    return volumes.map((volume) => new ResponseVolumeDto(volume));
   }
 
   @Get('/random')
@@ -52,18 +79,6 @@ export class StoryController {
       stories: response.stories.map((story) => new ResponseStoryDto(story)),
       author: response.author,
     };
-  }
-
-  @Get('one/:id')
-  async findOneById(@Param('id') id: string) {
-    const story = await this.storyService.findOneById(id);
-    return new ResponseStoryDto(story);
-  }
-
-  @Get(':slug')
-  async findOne(@Param('slug') slug: string) {
-    const story = await this.storyService.findOneBySlug(slug);
-    return new ResponseStoryDetailsDto(story);
   }
 
   @Get()
@@ -97,18 +112,19 @@ export class StoryController {
     return await this.storyService.deleteById(id, req.user.id);
   }
 
-  @Get('top/fanfics')
-  async getTopFanfics() {
-    return this.storyService.getTopFanfics();
-  }
-
-  @Get('top/originals')
-  async getTopOriginals() {
-    return this.storyService.getTopOriginals();
+  @Get('top')
+  async getTopStories(@Query('type') type: StoryType) {
+    return this.storyService.getTopStoriesByType(type);
   }
 
   @Get(':id/recommendations')
   async getRecommendations(@Param('id') id: string) {
     return this.storyService.getRecommendations(id);
+  }
+
+  @Get('/:uuidOrSlug')
+  async findOneById(@Param('uuidOrSlug') uuidOrSlug: string) {
+    const story = await this.storyService.findOne(uuidOrSlug);
+    return new ResponseStoryDto(story);
   }
 }
